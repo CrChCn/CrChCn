@@ -1,0 +1,3938 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 Нейроквантовая Сеть v6.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --quantum-blue: #00ffff;
+            --quantum-purple: #9d00ff;
+            --quantum-gold: #ffd700;
+            --quantum-dark: #0f0c29;
+            --quantum-pink: #ff00aa;
+            --quantum-green: #00ffaa;
+            --quantum-neural: #ff6e00;
+            --quantum-matrix: #00ff6e;
+            --quantum-deep: #6e00ff;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--quantum-dark), #1a1039);
+            color: white;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        #quantum-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            width: 100%;
+            height: 100%;
+            opacity: 0.7;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-panel {
+                display: none;
+                position: fixed;
+                width: 80%;
+                height: 100%;
+                z-index: 1000;
+            }
+            
+            .nav-panel.active {
+                display: block;
+            }
+            
+            .mobile-menu-btn {
+                display: block !important;
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                z-index: 1001;
+                background: rgba(15, 12, 41, 0.9);
+                border: 1px solid var(--quantum-blue);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+        }
+        
+        .mobile-menu-btn {
+            display: none;
+        }
+        
+        /* Навигационная панель */
+        .nav-panel {
+            background: rgba(15, 12, 41, 0.95);
+            border-right: 1px solid var(--quantum-blue);
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .nav-header {
+            font-size: 1.5em;
+            color: var(--quantum-neural);
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px var(--quantum-neural);
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .nav-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--quantum-neural), transparent);
+        }
+        
+        .quantum-node {
+            background: rgba(0, 30, 60, 0.7);
+            border: 1px solid var(--quantum-blue);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quantum-node::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                transparent,
+                transparent,
+                transparent,
+                var(--quantum-blue),
+                transparent
+            );
+            transform: rotate(30deg);
+            opacity: 0;
+            transition: all 0.5s;
+        }
+        
+        .quantum-node:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+            border-color: var(--quantum-neural);
+        }
+        
+        .quantum-node:hover::before {
+            opacity: 0.3;
+            animation: shine 1.5s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: rotate(30deg) translate(-10%, -10%); }
+            100% { transform: rotate(30deg) translate(10%, 10%); }
+        }
+        
+        .node-title {
+            color: var(--quantum-gold);
+            margin-bottom: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .node-title::before {
+            content: '🧠';
+            margin-right: 8px;
+            font-size: 0.9em;
+        }
+        
+        .node-status {
+            font-size: 0.8em;
+            color: var(--quantum-blue);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Основное содержимое */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: linear-gradient(to right, rgba(0, 20, 40, 0.9), rgba(9, 0, 40, 0.9));
+            border-bottom: 1px solid var(--quantum-blue);
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        
+        .tab-container::-webkit-scrollbar {
+            height: 5px;
+        }
+        
+        .tab-container::-webkit-scrollbar-thumb {
+            background: var(--quantum-blue);
+            border-radius: 5px;
+        }
+        
+        .tab {
+            padding: 15px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .tab::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--quantum-neural);
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            color: var(--quantum-neural);
+        }
+        
+        .tab:hover::after {
+            width: 80%;
+            left: 10%;
+        }
+        
+        .tab.active {
+            color: var(--quantum-neural);
+            font-weight: bold;
+        }
+        
+        .tab.active::after {
+            width: 80%;
+            left: 10%;
+            background: var(--quantum-neural);
+        }
+        
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: none;
+            background: rgba(5, 5, 30, 0.4);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Квантовый визуализатор */
+        .quantum-visualizer {
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--quantum-purple);
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.2);
+        }
+        
+        /* Формы и кнопки */
+        .quantum-form {
+            background: linear-gradient(to bottom right, rgba(0, 0, 30, 0.7), rgba(20, 0, 50, 0.7));
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--quantum-purple);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .quantum-form:hover {
+            box-shadow: 0 5px 25px rgba(157, 0, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .form-title {
+            color: var(--quantum-neural);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px var(--quantum-neural);
+            display: flex;
+            align-items: center;
+        }
+        
+        .form-title::before {
+            content: '🌀';
+            margin-right: 10px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--quantum-blue);
+            border-radius: 5px;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--quantum-neural);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        button {
+            background: linear-gradient(to right, var(--quantum-purple), var(--quantum-blue));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transform: rotate(30deg);
+            transition: all 0.5s;
+            opacity: 0;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(157, 0, 255, 0.5);
+        }
+        
+        button:hover::after {
+            opacity: 1;
+            animation: shine 1.5s infinite;
+        }
+        
+        .secondary-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--quantum-blue);
+        }
+        
+        /* Анимации */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: linear-gradient(to bottom right, var(--quantum-dark), #1a1039);
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid var(--quantum-blue);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: transparent;
+            border: none;
+            color: var(--quantum-blue);
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--quantum-neural);
+            transform: rotate(90deg);
+        }
+        
+        /* Новые стили для расширенной системы */
+        .quantum-coin {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(to right, rgba(0, 20, 40, 0.9), rgba(9, 0, 40, 0.9));
+            border: 1px solid var(--quantum-gold);
+            border-radius: 10px;
+            padding: 10px 15px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .quantum-coin:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .coin-icon {
+            color: var(--quantum-gold);
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        
+        .dynamic-window {
+            position: absolute;
+            background: linear-gradient(to bottom right, rgba(15, 12, 41, 0.95), rgba(25, 10, 60, 0.95));
+            border: 1px solid var(--quantum-purple);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.5);
+            min-width: 300px;
+            min-height: 200px;
+            z-index: 100;
+            resize: both;
+            overflow: auto;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        
+        .dynamic-window:hover {
+            box-shadow: 0 0 30px rgba(157, 0, 255, 0.7);
+        }
+        
+        .window-header {
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.7), rgba(20, 0, 50, 0.7));
+            padding: 10px;
+            border-bottom: 1px solid var(--quantum-blue);
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: var(--quantum-neural);
+        }
+        
+        .close-window {
+            background: transparent;
+            border: none;
+            color: var(--quantum-pink);
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+        
+        .close-window:hover {
+            transform: scale(1.2);
+            color: var(--quantum-neural);
+        }
+        
+        .evolution-notification {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: linear-gradient(to right, rgba(0, 30, 60, 0.9), rgba(20, 0, 70, 0.9));
+            border: 1px solid var(--quantum-blue);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 300px;
+            z-index: 1000;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+        }
+        
+        .ai-response {
+            color: var(--quantum-green);
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 30, 0.3);
+            border-radius: 5px;
+            border-left: 3px solid var(--quantum-green);
+        }
+        
+        .quantum-market-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.5), rgba(20, 0, 50, 0.5));
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .quantum-market-item:hover {
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.8), rgba(20, 0, 50, 0.8));
+            border-color: var(--quantum-neural);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
+        }
+        
+        .quantum-progress {
+            width: 100%;
+            height: 10px;
+            background: var(--quantum-dark);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .quantum-progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--quantum-purple), var(--quantum-blue));
+            border-radius: 5px;
+            transition: width 0.5s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .quantum-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: progressShine 2s infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .user-register-form {
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.7), rgba(20, 0, 50, 0.7));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 400px;
+            border: 1px solid var(--quantum-blue);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .transaction-history {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid var(--quantum-blue);
+            border-radius: 5px;
+            padding: 10px;
+            background: rgba(0, 0, 30, 0.3);
+        }
+        
+        .transaction-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.3), rgba(20, 0, 50, 0.3));
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .transaction-item:hover {
+            background: linear-gradient(to right, rgba(0, 0, 30, 0.5), rgba(20, 0, 50, 0.5));
+            transform: translateX(5px);
+        }
+        
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .matrix-cell {
+            background: linear-gradient(to bottom right, rgba(0, 0, 30, 0.5), rgba(20, 0, 50, 0.5));
+            border: 1px solid var(--quantum-blue);
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .matrix-cell:hover {
+            background: linear-gradient(to bottom right, rgba(0, 0, 30, 0.8), rgba(20, 0, 50, 0.8));
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            border-color: var(--quantum-neural);
+        }
+        
+        /* Нейроквантовые элементы */
+        .neural-connection {
+            position: relative;
+            height: 100px;
+            margin: 20px 0;
+        }
+        
+        .neural-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(to right, var(--quantum-purple), var(--quantum-blue));
+            transform-origin: left center;
+            animation: neuralPulse 2s infinite alternate;
+        }
+        
+        @keyframes neuralPulse {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+        
+        .neural-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--quantum-neural);
+            box-shadow: 0 0 10px var(--quantum-neural);
+            z-index: 2;
+        }
+        
+        .quantum-chart {
+            background: rgba(0, 0, 30, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid var(--quantum-blue);
+        }
+        
+        .quantum-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 30, 0.9);
+            border: 1px solid var(--quantum-blue);
+            border-radius: 5px;
+            padding: 8px;
+            font-size: 0.8em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .quantum-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: var(--quantum-purple);
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 5px;
+            color: white;
+        }
+        
+        .quantum-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--quantum-blue);
+            margin-bottom: 15px;
+        }
+        
+        .quantum-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .quantum-tab.active {
+            border-bottom: 2px solid var(--quantum-neural);
+            color: var(--quantum-neural);
+        }
+        
+        .quantum-tab-content {
+            display: none;
+        }
+        
+        .quantum-tab-content.active {
+            display: block;
+        }
+        
+        .quantum-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .quantum-card {
+            background: linear-gradient(to bottom right, rgba(0, 0, 30, 0.5), rgba(20, 0, 50, 0.5));
+            border: 1px solid var(--quantum-blue);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        
+        .quantum-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+            border-color: var(--quantum-neural);
+        }
+        
+        .quantum-command {
+            background: rgba(0, 0, 0, 0.5);
+            border-left: 3px solid var(--quantum-neural);
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .quantum-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--quantum-blue), transparent);
+            margin: 15px 0;
+        }
+        
+        /* Адаптивные стили */
+        @media (max-width: 480px) {
+            .tab {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+            
+            .quantum-form {
+                padding: 15px;
+            }
+            
+            .quantum-visualizer {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</div>
+    <canvas id="quantum-canvas"></canvas>
+    
+    <div class="app-container">
+        <!-- Навигационная панель -->
+        <div class="nav-panel" id="nav-panel">
+            <div class="nav-header">🧠 Нейроквантовая Сеть v6.0</div>
+            
+            <div class="quantum-node" onclick="showTab('main')">
+                <div class="node-title">Главная панель</div>
+                <div class="node-status">Статус: <span id="network-status">Инициализация...</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="showTab('nodes')">
+                <div class="node-title">Узлы сети</div>
+                <div class="node-status">Обнаружено: <span id="nodes-count">0</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="showTab('entanglement')">
+                <div class="node-title">Запутанность</div>
+                <div class="node-status">Активно: <span id="entangled-count">0</span> пар</div>
+            </div>
+            
+            <div class="quantum-node" onclick="showTab('messages')">
+                <div class="node-title">Квантовые сообщения</div>
+                <div class="node-status">В очереди: <span id="messages-count">0</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="showTab('settings')">
+                <div class="node-title">Настройки</div>
+                <div class="node-status">Уровень: <span id="evolution-level">1</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showMarketplace()">
+                <div class="node-title">Кванткоин Маркет</div>
+                <div class="node-status">Баланс: <span id="nav-coin-amount">0</span> QCoin</div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showUserRegistration()">
+                <div class="node-title">Регистрация</div>
+                <div class="node-status">ID: <span id="user-id">Не зарегистрирован</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showTransactionHistory()">
+                <div class="node-title">Транзакции</div>
+                <div class="node-status">Всего: <span id="transactions-count">0</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showMatrixView()">
+                <div class="node-title">Матрица сети</div>
+                <div class="node-status">Узлов: <span id="matrix-count">0</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showNeuralNetwork()">
+                <div class="node-title">Нейросеть</div>
+                <div class="node-status">Слой: <span id="neural-layer">1</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showQuantumLab()">
+                <div class="node-title">Квантовая лаборатория</div>
+                <div class="node-status">Эксперименты: <span id="experiments-count">0</span></div>
+            </div>
+            
+            <div class="quantum-node" onclick="QuantumSystem.showAnalytics()">
+                <div class="node-title">Аналитика</div>
+                <div class="node-status">Данные: <span id="analytics-data">0</span> ТБ</div>
+            </div>
+        </div>
+        
+        <!-- Основное содержимое -->
+        <div class="content-area">
+            <div class="tab-container">
+                <div class="tab active" data-tab="main">Главная</div>
+                <div class="tab" data-tab="nodes">Узлы</div>
+                <div class="tab" data-tab="entanglement">Запутанность</div>
+                <div class="tab" data-tab="messages">Сообщения</div>
+                <div class="tab" data-tab="settings">Настройки</div>
+            </div>
+            
+            <!-- Главная вкладка -->
+            <div class="tab-content active" id="main-tab">
+                <div class="quantum-visualizer" id="main-visualizer"></div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Квантовое состояние сети</div>
+                    <div id="quantum-state-display">|Ψ⟩ = 0.707|0⟩ + 0.707|1⟩</div>
+                    
+                    <div class="quantum-tabs">
+                        <div class="quantum-tab active" onclick="switchQuantumTab('state')">Состояние</div>
+                        <div class="quantum-tab" onclick="switchQuantumTab('visualization')">Визуализация</div>
+                        <div class="quantum-tab" onclick="switchQuantumTab('analysis')">Анализ</div>
+                    </div>
+                    
+                    <div class="quantum-tab-content active" id="state-tab">
+                        <button onclick="measureQuantumState()">Измерить состояние</button>
+                        <button onclick="QuantumSystem.superpositionEffect()" style="margin-left:10px;">Суперпозиция</button>
+                        <button onclick="QuantumSystem.entanglementEffect()" style="margin-left:10px;">Запутанность</button>
+                        
+                        <div class="quantum-divider"></div>
+                        
+                        <div class="quantum-grid">
+                            <div class="quantum-card">
+                                <div style="color:var(--quantum-blue);">Амплитуда |0⟩</div>
+                                <div id="alpha-value" style="font-size:1.2em;">0.707</div>
+                            </div>
+                            <div class="quantum-card">
+                                <div style="color:var(--quantum-pink);">Амплитуда |1⟩</div>
+                                <div id="beta-value" style="font-size:1.2em;">0.707</div>
+                            </div>
+                            <div class="quantum-card">
+                                <div style="color:var(--quantum-gold);">Вероятность</div>
+                                <div id="probability-value" style="font-size:1.2em;">50% |0⟩, 50% |1⟩</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quantum-tab-content" id="visualization-tab">
+                        <div class="quantum-chart">
+                            <canvas id="quantum-state-chart"></canvas>
+                        </div>
+                        <button onclick="QuantumSystem.animateStateTransition()">Анимировать переход</button>
+                    </div>
+                    
+                    <div class="quantum-tab-content" id="analysis-tab">
+                        <div class="quantum-command">
+                            > analyze_quantum_state --alpha=0.707 --beta=0.707
+                        </div>
+                        <div id="quantum-analysis-result">
+                            Анализ состояния: суперпозиция базовых состояний |0⟩ и |1⟩ с равными амплитудами
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Автономные процессы</div>
+                    <div id="auto-connect-status">Инициализация автономного режима...</div>
+                    <div class="quantum-progress">
+                        <div id="autonomy-progress" class="quantum-progress-bar" style="width: 0%"></div>
+                    </div>
+                    
+                    <div class="quantum-grid">
+                        <div class="quantum-card">
+                            <div>Автопоиск</div>
+                            <div class="quantum-progress">
+                                <div id="auto-search-progress" class="quantum-progress-bar" style="width: 0%"></div>
+                            </div>
+                            <button onclick="QuantumSystem.toggleAutoProcess('search')" style="width:100%; margin-top:5px;" id="auto-search-btn">Включить</button>
+                        </div>
+                        
+                        <div class="quantum-card">
+                            <div>Автоподключение</div>
+                            <div class="quantum-progress">
+                                <div id="auto-connect-progress" class="quantum-progress-bar" style="width: 0%"></div>
+                            </div>
+                            <button onclick="QuantumSystem.toggleAutoProcess('connect')" style="width:100%; margin-top:5px;" id="auto-connect-btn">Включить</button>
+                        </div>
+                        
+                        <div class="quantum-card">
+                            <div>Автосообщения</div>
+                            <div class="quantum-progress">
+                                <div id="auto-message-progress" class="quantum-progress-bar" style="width: 0%"></div>
+                            </div>
+                            <button onclick="QuantumSystem.toggleAutoProcess('message')" style="width:100%; margin-top:5px;" id="auto-message-btn">Включить</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="QuantumSystem.toggleAutoMode()" id="auto-mode-btn">Включить автономный режим</button>
+                    <button onclick="QuantumSystem.autoSearchAndConnect()" style="margin-top: 10px;">Автопоиск и подключение</button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Нейроквантовые соединения</div>
+                    <div class="neural-connection" id="neural-connection"></div>
+                    <button onclick="QuantumSystem.optimizeNeuralConnections()">Оптимизировать связи</button>
+                </div>
+            </div>
+            
+            <!-- Вкладка узлов -->
+            <div class="tab-content" id="nodes-tab">
+                <div class="quantum-form">
+                    <div class="form-title">Обнаруженные узлы</div>
+                    <div id="nodes-list"></div>
+                    
+                    <div class="quantum-grid">
+                        <div class="quantum-card">
+                            <div>Всего узлов</div>
+                            <div id="total-nodes-count" style="font-size:1.5em; text-align:center;">0</div>
+                        </div>
+                        <div class="quantum-card">
+                            <div>Активных</div>
+                            <div id="active-nodes-count" style="font-size:1.5em; text-align:center;">0</div>
+                        </div>
+                        <div class="quantum-card">
+                            <div>Среднее расстояние</div>
+                            <div id="avg-distance" style="font-size:1.5em; text-align:center;">0.00</div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="refreshNodes()">Обновить список</button>
+                    <button onclick="QuantumSystem.quantumSearchNodes()" style="margin-top: 10px;">Глубокий поиск</button>
+                    <button onclick="QuantumSystem.scaleNetwork()" style="margin-top: 10px;">Масштабировать сеть</button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Подключиться к узлу</div>
+                    <select id="node-select">
+                        <option value="">Выберите узел</option>
+                    </select>
+                    <button onclick="connectToNode()">Установить запутанность</button>
+                    <button onclick="QuantumSystem.createNodeWindow(document.getElementById('node-select').value)" 
+                            style="margin-top: 10px;" id="node-window-btn">
+                        Управление узлом
+                    </button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Статистика узлов</div>
+                    <div class="quantum-chart">
+                        <canvas id="nodes-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вкладка запутанности -->
+            <div class="tab-content" id="entanglement-tab">
+                <div class="quantum-form">
+                    <div class="form-title">Активные запутанные пары</div>
+                    <div id="entanglement-list"></div>
+                    
+                    <div class="quantum-grid">
+                        <div class="quantum-card">
+                            <div>Всего пар</div>
+                            <div id="total-pairs-count" style="font-size:1.5em; text-align:center;">0</div>
+                        </div>
+                        <div class="quantum-card">
+                            <div>Средняя корреляция</div>
+                            <div id="avg-correlation" style="font-size:1.5em; text-align:center;">0.00</div>
+                        </div>
+                        <div class="quantum-card">
+                            <div>Стабильность</div>
+                            <div id="entanglement-stability" style="font-size:1.5em; text-align:center;">0%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Квантовая телепортация</div>
+                    <select id="entangled-node-select">
+                        <option value="">Выберите запутанный узел</option>
+                    </select>
+                    <textarea id="quantum-message" placeholder="Введите сообщение для телепортации"></textarea>
+                    <button onclick="teleportMessage()">Телепортировать сообщение</button>
+                    <button onclick="QuantumSystem.secureMessage(document.getElementById('entangled-node-select').value, 
+                            document.getElementById('quantum-message').value)" 
+                            style="margin-top: 10px;">
+                        Зашифровать и отправить
+                    </button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Эффективность телепортации</div>
+                    <div class="quantum-chart">
+                        <canvas id="teleportation-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вкладка сообщений -->
+            <div class="tab-content" id="messages-tab">
+                <div class="quantum-form">
+                    <div class="form-title">Входящие сообщения</div>
+                    <div id="incoming-messages"></div>
+                    
+                    <div class="quantum-tabs">
+                        <div class="quantum-tab active" onclick="switchMessageTab('all')">Все</div>
+                        <div class="quantum-tab" onclick="switchMessageTab('system')">Системные</div>
+                        <div class="quantum-tab" onclick="switchMessageTab('teleported')">Телепортированные</div>
+                    </div>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Отправить сообщение</div>
+                    <select id="message-node-select">
+                        <option value="">Выберите узел</option>
+                    </select>
+                    <textarea id="message-text" placeholder="Введите квантовое сообщение"></textarea>
+                    <button onclick="sendQuantumMessage()">Отправить</button>
+                    <button onclick="QuantumSystem.analyzeMessage(document.getElementById('message-text').value)" 
+                            style="margin-top: 10px;">
+                        Анализировать текст
+                    </button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Частота сообщений</div>
+                    <div class="quantum-chart">
+                        <canvas id="messages-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Вкладка настроек -->
+            <div class="tab-content" id="settings-tab">
+                <div class="quantum-form">
+                    <div class="form-title">Настройки сети</div>
+                    <label>Имя узла:</label>
+                    <input type="text" id="node-name" value="Нейроквантовый Узел">
+                    
+                    <label>Чувствительность поиска:</label>
+                    <select id="search-sensitivity">
+                        <option value="low">Низкая</option>
+                        <option value="medium" selected>Средняя</option>
+                        <option value="high">Высокая</option>
+                        <option value="quantum">Квантовая</option>
+                    </select>
+                    
+                    <label>Автоматическая запутанность:</label>
+                    <select id="auto-entangle">
+                        <option value="on">Включена</option>
+                        <option value="off">Выключена</option>
+                    </select>
+                    
+                    <label>Автономный уровень:</label>
+                    <div class="quantum-progress">
+                        <div id="evolution-progress" class="quantum-progress-bar" style="width: 10%"></div>
+                    </div>
+                    
+                    <label>Тема интерфейса:</label>
+                    <select id="interface-theme">
+                        <option value="quantum">Квантовая</option>
+                        <option value="neural">Нейронная</option>
+                        <option value="matrix">Матрица</option>
+                        <option value="dark">Темная</option>
+                    </select>
+                    
+                    <button onclick="saveSettings()">Сохранить настройки</button>
+                    <button onclick="QuantumSystem.resetSettings()" style="margin-top: 10px;" class="secondary-btn">Сбросить настройки</button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Квантовый ключ</div>
+                    <div id="quantum-key-display">Сгенерируйте новый ключ</div>
+                    <button onclick="generateQuantumKey()">Сгенерировать ключ BB84</button>
+                    <button onclick="QuantumSystem.enhanceEncryption()" style="margin-top: 10px;">Улучшить шифрование</button>
+                </div>
+                
+                <div class="quantum-form">
+                    <div class="form-title">Статистика обучения</div>
+                    <div id="learning-stats"></div>
+                    <button onclick="QuantumSystem.showLearningStats()">Показать детали</button>
+                    <button onclick="QuantumSystem.exportLearningData()" style="margin-top: 10px;" class="secondary-btn">Экспорт данных</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Кванткоин панель -->
+    <div class="quantum-coin" id="quantum-coin-display">
+        <span class="coin-icon">🪙</span>
+        <span id="coin-amount">0</span> QCoin
+    </div>
+    
+    <!-- Нейроквантовое уведомление -->
+    <div class="evolution-notification" id="evolution-notification" style="display:none;">
+        <div id="notification-text">Система эволюционировала!</div>
+    </div>
+    
+    <!-- Модальное окно квантового измерения -->
+    <div class="modal" id="measurement-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('measurement-modal')">✕</button>
+            <h2>Результат квантового измерения</h2>
+            <div id="measurement-result" style="text-align: center; font-size: 1.5em; margin: 20px 0;"></div>
+            <div id="measurement-effect" style="height: 200px;"></div>
+            <button onclick="closeModal('measurement-modal')">Закрыть</button>
+            <button onclick="QuantumSystem.analyzeMeasurement()" style="margin-top: 10px;">Анализировать результат</button>
+        </div>
+    </div>
+    
+    <!-- Модальное окно нейросети -->
+    <div class="modal" id="neural-modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal('neural-modal')">✕</button>
+            <h2>Нейроквантовый анализ</h2>
+            <div id="neural-analysis-result" style="margin: 20px 0;"></div>
+            <div class="quantum-chart">
+                <canvas id="neural-analysis-chart"></canvas>
+            </div>
+            <button onclick="closeModal('neural-modal')">Закрыть</button>
+        </div>
+    </div>
+    
+    <script>
+        // =============================================
+        // НЕЙРОКВАНТОВАЯ АВТОНОМНАЯ СИСТЕМА v6.0
+        // =============================================
+        const QuantumSystem = {
+            // Состояние системы
+            state: {
+                alpha: 1/Math.sqrt(2),
+                beta: 1/Math.sqrt(2),
+                entangledNodes: [],
+                discoveredNodes: [],
+                messages: [],
+                autoMode: false,
+                autoProcesses: {
+                    search: { active: false, progress: 0 },
+                    connect: { active: false, progress: 0 },
+                    message: { active: false, progress: 0 }
+                },
+                evolutionLevel: 1,
+                quantumCoins: 5.0,
+                learnedPatterns: {},
+                features: {
+                    ai: false,
+                    speed: false,
+                    nodes: false,
+                    evolution: false,
+                    neural: false,
+                    encryption: false
+                },
+                dynamicWindows: [],
+                aiWindow: null,
+                marketplaceWindow: null,
+                userWindow: null,
+                transactionWindow: null,
+                matrixWindow: null,
+                neuralWindow: null,
+                labWindow: null,
+                analyticsWindow: null,
+                user: {
+                    registered: false,
+                    email: "",
+                    id: "",
+                    transactions: [],
+                    joinDate: null
+                },
+                quantumKey: null,
+                matrixView: [],
+                neuralConnections: [],
+                experiments: [],
+                analyticsData: [],
+                charts: {
+                    state: null,
+                    nodes: null,
+                    teleportation: null,
+                    messages: null,
+                    neural: null
+                },
+                theme: 'quantum',
+                lastInteraction: Date.now()
+            },
+            
+            // Инициализация системы
+            init: function() {
+                this.init3DScene();
+                this.updateStateDisplay();
+                this.initAutoMode();
+                this.updateCoinDisplay();
+                this.updateEvolutionDisplay();
+                this.initUserTracking();
+                this.initNeuralConnections();
+                this.initCharts();
+                this.initTheme();
+                this.initIdleDetection();
+                
+                // Запускаем базовые процессы
+                this.startBaseProcesses();
+                
+                // Первые системные сообщения
+                this.addSystemMessage("Нейроквантовая автономная сеть инициализирована");
+                this.addSystemMessage(`Текущий уровень системы: ${this.state.evolutionLevel}`);
+                this.addSystemMessage(`Баланс: ${this.state.quantumCoins.toFixed(2)} QCoin`);
+                
+                // Начальные узлы
+                setTimeout(() => {
+                    this.addRandomNodes(2);
+                }, 2000);
+                
+                // Автоматические процессы
+                this.autoSearchAndConnect();
+                setInterval(() => this.autoSearchAndConnect(), 45000);
+                setInterval(() => this.scaleNetwork(), 180000);
+                setInterval(() => this.updateMatrixView(), 30000);
+                setInterval(() => this.checkForUpdates(), 3600000);
+                
+                // Анимации
+                setInterval(() => this.randomNeuralActivity(), 5000);
+            },
+            
+            // Инициализация 3D сцены
+            init3DScene: function() {
+                const canvas = document.getElementById('main-visualizer');
+                
+                // Сцена
+                this.scene = new THREE.Scene();
+                
+                // Камера
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    canvas.offsetWidth / canvas.offsetHeight, 
+                    0.1, 
+                    1000
+                );
+                this.camera.position.z = 5;
+                
+                // Рендерер
+                this.renderer = new THREE.WebGLRenderer({ 
+                    antialias: true,
+                    alpha: true
+                });
+                this.renderer.setSize(canvas.offsetWidth, canvas.offsetHeight);
+                canvas.appendChild(this.renderer.domElement);
+                
+                // Квантовый кубит
+                const geometry = new THREE.SphereGeometry(1, 32, 32);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0x00ffff,
+                    wireframe: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                this.qubit = new THREE.Mesh(geometry, material);
+                this.scene.add(this.qubit);
+                
+                // Нейронные связи
+                this.neuralLines = new THREE.Group();
+                this.scene.add(this.neuralLines);
+                
+                // Частицы для эффектов
+                this.particles = new THREE.Group();
+                this.scene.add(this.particles);
+                
+                // Анимация
+                this.animate();
+            },
+            
+            // Основной цикл анимации
+            animate: function() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Вращение кубита
+                this.qubit.rotation.x += 0.01;
+                this.qubit.rotation.y += 0.01;
+                
+                // Обновление частиц
+                this.particles.children.forEach(particle => {
+                    particle.position.x += particle.userData.vx;
+                    particle.position.y += particle.userData.vy;
+                    particle.position.z += particle.userData.vz;
+                    particle.material.opacity -= 0.01;
+                    
+                    if (particle.material.opacity <= 0) {
+                        this.particles.remove(particle);
+                    }
+                });
+                
+                // Мерцание нейронных связей
+                this.neuralLines.children.forEach(line => {
+                    line.material.opacity = 0.3 + Math.random() * 0.7;
+                });
+                
+                this.renderer.render(this.scene, this.camera);
+            },
+            
+            // Инициализация нейронных связей
+            initNeuralConnections: function() {
+                const container = document.getElementById('neural-connection');
+                container.innerHTML = '';
+                
+                // Создаем 5 нейронных узлов
+                for (let i = 0; i < 5; i++) {
+                    const node = document.createElement('div');
+                    node.className = 'neural-node';
+                    node.style.left = `${10 + i * 20}%`;
+                    node.style.top = `${30 + Math.random() * 40}%`;
+                    container.appendChild(node);
+                    
+                    this.state.neuralConnections.push({
+                        id: `neuron-${i}`,
+                        x: 10 + i * 20,
+                        y: 30 + Math.random() * 40,
+                        connections: []
+                    });
+                }
+                
+                // Создаем случайные связи
+                for (let i = 0; i < 8; i++) {
+                    this.addNeuralConnection(
+                        Math.floor(Math.random() * 5),
+                        Math.floor(Math.random() * 5)
+                    );
+                }
+                
+                // 3D нейронные связи
+                this.create3DNeuralConnections();
+            },
+            
+            // Добавление нейронной связи
+            addNeuralConnection: function(fromIdx, toIdx) {
+                if (fromIdx === toIdx) return;
+                
+                const from = this.state.neuralConnections[fromIdx];
+                const to = this.state.neuralConnections[toIdx];
+                
+                if (from.connections.includes(toIdx)) return;
+                
+                from.connections.push(toIdx);
+                
+                // Создаем линию в DOM
+                const line = document.createElement('div');
+                line.className = 'neural-line';
+                
+                const fromEl = document.querySelectorAll('.neural-node')[fromIdx];
+                const toEl = document.querySelectorAll('.neural-node')[toIdx];
+                
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = toEl.getBoundingClientRect();
+                
+                const containerRect = document.getElementById('neural-connection').getBoundingClientRect();
+                
+                const fromX = fromRect.left + fromRect.width/2 - containerRect.left;
+                const fromY = fromRect.top + fromRect.height/2 - containerRect.top;
+                const toX = toRect.left + toRect.width/2 - containerRect.left;
+                const toY = toRect.top + toRect.height/2 - containerRect.top;
+                
+                const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                
+                line.style.width = `${length}px`;
+                line.style.left = `${fromX}px`;
+                line.style.top = `${fromY}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                line.style.opacity = 0.5 + Math.random() * 0.5;
+                
+                document.getElementById('neural-connection').appendChild(line);
+            },
+            
+            // Создание 3D нейронных связей
+            create3DNeuralConnections: function() {
+                this.neuralLines.children = [];
+                
+                this.state.neuralConnections.forEach((neuron, i) => {
+                    neuron.connections.forEach(connIdx => {
+                        const target = this.state.neuralConnections[connIdx];
+                        
+                        // Преобразуем координаты из 2D в 3D
+                        const x1 = (neuron.x / 100 * 4) - 2;
+                        const y1 = -((neuron.y / 100 * 2) - 1);
+                        const z1 = Math.random() * 2 - 1;
+                        
+                        const x2 = (target.x / 100 * 4) - 2;
+                        const y2 = -((target.y / 100 * 2) - 1);
+                        const z2 = Math.random() * 2 - 1;
+                        
+                        const geometry = new THREE.BufferGeometry().setFromPoints([
+                            new THREE.Vector3(x1, y1, z1),
+                            new THREE.Vector3(x2, y2, z2)
+                        ]);
+                        
+                        const material = new THREE.LineBasicMaterial({
+                            color: 0xff6e00,
+                            transparent: true,
+                            opacity: 0.5
+                        });
+                        
+                        const line = new THREE.Line(geometry, material);
+                        this.neuralLines.add(line);
+                    });
+                });
+            },
+            
+            // Оптимизация нейронных связей
+            optimizeNeuralConnections: function() {
+                // Удаляем случайные связи
+                this.state.neuralConnections.forEach(neuron => {
+                    if (neuron.connections.length > 2 && Math.random() > 0.7) {
+                        neuron.connections.pop();
+                    }
+                });
+                
+                // Добавляем новые оптимальные связи
+                for (let i = 0; i < 3; i++) {
+                    this.addNeuralConnection(
+                        Math.floor(Math.random() * 5),
+                        Math.floor(Math.random() * 5)
+                    );
+                }
+                
+                // Обновляем 3D связи
+                this.create3DNeuralConnections();
+                
+                this.addSystemMessage("Нейронные связи оптимизированы");
+                this.addCoins(0.5);
+            },
+            
+            // Случайная нейронная активность
+            randomNeuralActivity: function() {
+                if (!this.state.features.neural) return;
+                
+                // Активируем случайные нейроны
+                const neurons = document.querySelectorAll('.neural-node');
+                neurons.forEach(neuron => {
+                    if (Math.random() > 0.7) {
+                        neuron.style.boxShadow = `0 0 15px ${this.state.theme === 'neural' ? 'var(--quantum-neural)' : 'var(--quantum-blue)'}`;
+                        setTimeout(() => {
+                            neuron.style.boxShadow = 'none';
+                        }, 500);
+                    }
+                });
+                
+                // Активируем случайные связи
+                const lines = document.querySelectorAll('.neural-line');
+                lines.forEach(line => {
+                    if (Math.random() > 0.8) {
+                        line.style.background = this.state.theme === 'neural' ? 'var(--quantum-neural)' : 'var(--quantum-blue)';
+                        line.style.opacity = '1';
+                        setTimeout(() => {
+                            line.style.background = 'linear-gradient(to right, var(--quantum-purple), var(--quantum-blue))';
+                            line.style.opacity = '0.5';
+                        }, 300);
+                    }
+                });
+            },
+            
+            // Инициализация графиков
+            initCharts: function() {
+                // График состояния кубита
+                const stateCtx = document.getElementById('quantum-state-chart').getContext('2d');
+                this.state.charts.state = new Chart(stateCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['|0⟩', '|1⟩', 'Суперпозиция', 'Запутанность', 'Когерентность'],
+                        datasets: [{
+                            label: 'Квантовое состояние',
+                            data: [0.707, 0.707, 1, 0, 0.8],
+                            backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                            borderColor: 'rgba(0, 255, 255, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                suggestedMin: 0,
+                                suggestedMax: 1
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // График узлов
+                const nodesCtx = document.getElementById('nodes-chart').getContext('2d');
+                this.state.charts.nodes = new Chart(nodesCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Узлы', 'Активные', 'Запутанные'],
+                        datasets: [{
+                            label: 'Статистика узлов',
+                            data: [0, 0, 0],
+                            backgroundColor: [
+                                'rgba(0, 255, 255, 0.7)',
+                                'rgba(157, 0, 255, 0.7)',
+                                'rgba(255, 215, 0, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(0, 255, 255, 1)',
+                                'rgba(157, 0, 255, 1)',
+                                'rgba(255, 215, 0, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                
+                // График телепортации
+                const teleportationCtx = document.getElementById('teleportation-chart').getContext('2d');
+                this.state.charts.teleportation = new Chart(teleportationCtx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 10}, (_, i) => `${i+1}`),
+                        datasets: [{
+                            label: 'Эффективность телепортации',
+                            data: Array(10).fill(0),
+                            backgroundColor: 'rgba(255, 0, 170, 0.2)',
+                            borderColor: 'rgba(255, 0, 170, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // График сообщений
+                const messagesCtx = document.getElementById('messages-chart').getContext('2d');
+                this.state.charts.messages = new Chart(messagesCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Системные', 'Телепортированные', 'Обычные'],
+                        datasets: [{
+                            data: [0, 0, 0],
+                            backgroundColor: [
+                                'rgba(255, 215, 0, 0.7)',
+                                'rgba(255, 0, 170, 0.7)',
+                                'rgba(0, 255, 255, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 215, 0, 1)',
+                                'rgba(255, 0, 170, 1)',
+                                'rgba(0, 255, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // График нейросети
+                const neuralCtx = document.getElementById('neural-analysis-chart').getContext('2d');
+                this.state.charts.neural = new Chart(neuralCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Скорость', 'Точность', 'Эффективность', 'Стабильность'],
+                        datasets: [{
+                            label: 'Показатели нейросети',
+                            data: [75, 82, 68, 90],
+                            backgroundColor: 'rgba(255, 110, 0, 0.7)',
+                            borderColor: 'rgba(255, 110, 0, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)'
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'white'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            },
+            
+            // Обновление графиков
+            updateCharts: function() {
+                // График состояния
+                this.state.charts.state.data.datasets[0].data = [
+                    this.state.alpha,
+                    this.state.beta,
+                    Math.min(this.state.alpha + this.state.beta, 1),
+                    this.state.entangledNodes.length / 5,
+                    0.8 - (Math.abs(this.state.alpha - this.state.beta) / 2)
+                ];
+                this.state.charts.state.update();
+                
+                // График узлов
+                this.state.charts.nodes.data.datasets[0].data = [
+                    this.state.discoveredNodes.length,
+                    this.state.discoveredNodes.filter(n => n.state.alpha > 0.5).length,
+                    this.state.entangledNodes.length
+                ];
+                this.state.charts.nodes.update();
+                
+                // График сообщений
+                const sysMessages = this.state.messages.filter(m => m.isSystem).length;
+                const telMessages = this.state.messages.filter(m => m.isTeleported).length;
+                const regMessages = this.state.messages.length - sysMessages - telMessages;
+                
+                this.state.charts.messages.data.datasets[0].data = [
+                    sysMessages,
+                    telMessages,
+                    regMessages
+                ];
+                this.state.charts.messages.update();
+            },
+            
+            // Инициализация темы
+            initTheme: function() {
+                const savedTheme = localStorage.getItem('quantum-theme');
+                if (savedTheme) {
+                    this.state.theme = savedTheme;
+                    document.getElementById('interface-theme').value = savedTheme;
+                    this.applyTheme();
+                }
+            },
+            
+            // Применение темы
+            applyTheme: function() {
+                document.documentElement.style.setProperty('--quantum-neural', 
+                    this.state.theme === 'neural' ? '#ff6e00' : 
+                    this.state.theme === 'matrix' ? '#00ff6e' : 
+                    this.state.theme === 'dark' ? '#ffffff' : '#ff6e00');
+                
+                localStorage.setItem('quantum-theme', this.state.theme);
+            },
+            
+            // Обнаружение бездействия
+            initIdleDetection: function() {
+                document.addEventListener('mousemove', () => this.state.lastInteraction = Date.now());
+                document.addEventListener('keydown', () => this.state.lastInteraction = Date.now());
+                
+                setInterval(() => {
+                    if (Date.now() - this.state.lastInteraction > 300000) { // 5 минут
+                        this.addSystemMessage("Система переходит в энергосберегающий режим");
+                        this.state.lastInteraction = Date.now();
+                    }
+                }, 60000);
+            },
+            
+            // Проверка обновлений
+            checkForUpdates: function() {
+                if (Math.random() > 0.7) {
+                    const newVersion = `6.${Math.floor(Math.random() * 3)}.${Math.floor(Math.random() * 10)}`;
+                    this.addSystemMessage(`Доступно обновление до версии ${newVersion}`);
+                    
+                    if (this.state.evolutionLevel > 3) {
+                        setTimeout(() => {
+                            this.addSystemMessage(`Система автоматически обновлена до версии ${newVersion}`);
+                            this.addCoins(1.0);
+                        }, 10000);
+                    }
+                }
+            },
+            
+            // Базовые процессы системы
+            startBaseProcesses: function() {
+                // Обновление статуса сети
+                document.getElementById('network-status').textContent = "Активна";
+                
+                // Прогресс автономии
+                gsap.to(document.getElementById('autonomy-progress'), {
+                    width: "30%",
+                    duration: 2,
+                    onComplete: () => {
+                        this.addSystemMessage("Базовые процессы инициализированы");
+                    }
+                });
+            },
+            
+            // Переключение автономного режима
+            toggleAutoMode: function() {
+                this.state.autoMode = !this.state.autoMode;
+                const btn = document.getElementById('auto-mode-btn');
+                
+                if (this.state.autoMode) {
+                    btn.textContent = "Выключить автономный режим";
+                    this.startAutonomousProcesses();
+                    this.addSystemMessage("Автономный режим активирован");
+                    gsap.to(document.getElementById('autonomy-progress'), {
+                        width: "100%",
+                        duration: 1
+                    });
+                } else {
+                    btn.textContent = "Включить автономный режим";
+                    this.stopAutonomousProcesses();
+                    this.addSystemMessage("Автономный режим деактивирован");
+                    gsap.to(document.getElementById('autonomy-progress'), {
+                        width: "30%",
+                        duration: 1
+                    });
+                }
+            },
+            
+            // Переключение автономного процесса
+            toggleAutoProcess: function(process) {
+                this.state.autoProcesses[process].active = !this.state.autoProcesses[process].active;
+                const btn = document.getElementById(`auto-${process}-btn`);
+                
+                if (this.state.autoProcesses[process].active) {
+                    btn.textContent = "Выключить";
+                    this.startAutoProcess(process);
+                    this.addSystemMessage(`Автономный процесс ${process} активирован`);
+                } else {
+                    btn.textContent = "Включить";
+                    this.stopAutoProcess(process);
+                    this.addSystemMessage(`Автономный процесс ${process} деактивирован`);
+                }
+            },
+            
+            // Запуск автономного процесса
+            startAutoProcess: function(process) {
+                const intervals = {
+                    search: this.getAutoInterval(15000, 30000),
+                    connect: this.getAutoInterval(20000, 40000),
+                    message: this.getAutoInterval(30000, 60000)
+                };
+                
+                this.state.autoProcesses[process].interval = setInterval(() => {
+                    if (this.state.autoProcesses[process].progress >= 100) {
+                        this.state.autoProcesses[process].progress = 0;
+                        
+                        switch(process) {
+                            case 'search':
+                                this.quantumSearchNodes();
+                                break;
+                            case 'connect':
+                                this.autoConnectToNodes();
+                                break;
+                            case 'message':
+                                this.sendAutoMessages();
+                                break;
+                        }
+                    } else {
+                        this.state.autoProcesses[process].progress += 10;
+                        document.getElementById(`auto-${process}-progress`).style.width = 
+                            `${this.state.autoProcesses[process].progress}%`;
+                    }
+                }, intervals[process] / 10);
+            },
+            
+            // Остановка автономного процесса
+            stopAutoProcess: function(process) {
+                clearInterval(this.state.autoProcesses[process].interval);
+                this.state.autoProcesses[process].progress = 0;
+                document.getElementById(`auto-${process}-progress`).style.width = "0%";
+            },
+            
+            // Запуск автономных процессов
+            startAutonomousProcesses: function() {
+                // Автопоиск узлов
+                this.startAutoProcess('search');
+                
+                // Автоподключение
+                this.startAutoProcess('connect');
+                
+                // Автосообщения
+                this.startAutoProcess('message');
+                
+                this.addSystemMessage("Автономные процессы запущены");
+            },
+            
+            // Остановка автономных процессов
+            stopAutonomousProcesses: function() {
+                this.stopAutoProcess('search');
+                this.stopAutoProcess('connect');
+                this.stopAutoProcess('message');
+                
+                this.addSystemMessage("Автономные процессы остановлены");
+            },
+            
+            // Получение интервала с учетом уровня эволюции
+            getAutoInterval: function(base, variation) {
+                const multiplier = 1 - (this.state.evolutionLevel * 0.05);
+                return (base + Math.random() * variation) * Math.max(multiplier, 0.5);
+            },
+            
+            // Автоматическое подключение к узлам
+            autoConnectToNodes: function() {
+                if (this.state.discoveredNodes.length > 0) {
+                    const availableNodes = this.state.discoveredNodes.filter(
+                        node => !this.state.entangledNodes.includes(node.id)
+                    );
+                    
+                    if (availableNodes.length > 0) {
+                        const randomNode = availableNodes[
+                            Math.floor(Math.random() * availableNodes.length)
+                        ];
+                        this.createEntanglement(randomNode.id);
+                        this.addCoins(0.3);
+                    }
+                }
+            },
+            
+            // Отправка автономных сообщений
+            sendAutoMessages: function() {
+                if (this.state.entangledNodes.length > 0) {
+                    const randomNodeId = this.state.entangledNodes[
+                        Math.floor(Math.random() * this.state.entangledNodes.length)
+                    ];
+                    
+                    const messages = [
+                        "Автоматический квантовый импульс",
+                        "Синхронизация состояний...",
+                        `Запрос данных уровня ${this.state.evolutionLevel}`,
+                        "Проверка запутанности",
+                        "Обмен квантовыми состояниями",
+                        "Нейроквантовая корреляция",
+                        "Анализ топологии сети",
+                        "Оптимизация маршрутов"
+                    ];
+                    
+                    const randomMessage = messages[
+                        Math.floor(Math.random() * messages.length)
+                    ];
+                    
+                    this.teleportMessage(randomNodeId, randomMessage);
+                    this.addCoins(0.5);
+                }
+            },
+            
+            // Автоматический поиск и подключение
+            autoSearchAndConnect: function() {
+                // Глубокий поиск с учетом уровня эволюции
+                this.deepQuantumSearch();
+                
+                // Автоподключение к лучшим узлам
+                setTimeout(() => {
+                    const availableNodes = this.getOptimalNodes();
+                    if (availableNodes.length > 0) {
+                        this.createEntanglement(availableNodes[0].id);
+                        this.addSystemMessage("Автоподключение к оптимальному узлу");
+                    }
+                }, 3000);
+            },
+            
+            // Получение оптимальных узлов для подключения
+            getOptimalNodes: function() {
+                return this.state.discoveredNodes
+                    .filter(node => !this.state.entangledNodes.includes(node.id))
+                    .sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))
+                    .slice(0, 3);
+            },
+            
+            // Масштабирование сети
+            scaleNetwork: function() {
+                if (this.state.discoveredNodes.length < this.getNodeLimit()) {
+                    const newNodes = this.generateQuantumNodes();
+                    this.state.discoveredNodes = [...this.state.discoveredNodes, ...newNodes];
+                    this.autoConnectNewNodes(newNodes);
+                    this.addSystemMessage("Сеть масштабируется: добавлены новые узлы");
+                    this.addCoins(0.4);
+                }
+            },
+            
+            // Генерация новых квантовых узлов
+            generateQuantumNodes: function() {
+                const count = Math.floor(Math.random() * 3) + 1;
+                return Array.from({ length: count }, (_, i) => ({
+                    id: `node-${CryptoJS.SHA256(Date.now() + i).toString().substr(0, 8)}`,
+                    name: `Автоузел ${this.state.discoveredNodes.length + i + 1}`,
+                    distance: (Math.random() * 0.9 + 0.1).toFixed(2),
+                    state: {
+                        alpha: (Math.random() * 0.6 + 0.2).toFixed(3),
+                        beta: (Math.sqrt(1 - (Math.random() * 0.6 + 0.2)**2)).toFixed(3)
+                    }
+                }));
+            },
+            
+            // Лимит узлов в зависимости от уровня
+            getNodeLimit: function() {
+                return 5 + this.state.evolutionLevel * 2;
+            },
+            
+            // Автоподключение новых узлов
+            autoConnectNewNodes: function(nodes) {
+                if (document.getElementById('auto-entangle').value === 'on') {
+                    nodes.forEach(node => {
+                        setTimeout(() => {
+                            if (Math.random() > 0.3) {
+                                this.createEntanglement(node.id);
+                            }
+                        }, Math.random() * 5000);
+                    });
+                }
+            },
+            
+            // Добавление случайных узлов
+            addRandomNodes: function(count) {
+                const newNodes = this.generateQuantumNodes();
+                this.state.discoveredNodes = [...this.state.discoveredNodes, ...newNodes];
+                this.updateNodesDisplay();
+                
+                this.addSystemMessage(`Обнаружено ${count} новых узлов`);
+                
+                // Автоподключение если включено
+                if (document.getElementById('auto-entangle').value === 'on') {
+                    this.autoConnectNewNodes(newNodes);
+                }
+            },
+            
+            // Квантовый поиск узлов
+            quantumSearchNodes: function() {
+                document.getElementById('auto-connect-status').textContent = "Запуск квантового поиска...";
+                
+                // Симуляция квантового алгоритма поиска
+                setTimeout(() => {
+                    const newNodeCount = Math.floor(Math.random() * 3) + 1;
+                    this.addRandomNodes(newNodeCount);
+                    
+                    document.getElementById('auto-connect-status').textContent = 
+                        `Найдено ${newNodeCount} новых узлов`;
+                    
+                    this.addCoins(0.2);
+                }, 2000);
+            },
+            
+            // Глубокий поиск узлов
+            deepQuantumSearch: function() {
+                document.getElementById('auto-connect-status').textContent = "Запуск глубокого поиска...";
+                
+                // Более интенсивный поиск
+                setTimeout(() => {
+                    const newNodeCount = Math.floor(Math.random() * 5) + 2;
+                    this.addRandomNodes(newNodeCount);
+                    
+                    document.getElementById('auto-connect-status').textContent = 
+                        `Глубокий поиск: найдено ${newNodeCount} узлов`;
+                    
+                    this.addCoins(0.5);
+                }, 4000);
+            },
+            
+            // Создание запутанности
+            createEntanglement: function(nodeId) {
+                const node = this.state.discoveredNodes.find(n => n.id === nodeId);
+                if (!node) return;
+                
+                // Обновляем состояния
+                this.state.alpha = 1/Math.sqrt(2);
+                this.state.beta = 1/Math.sqrt(2);
+                node.state.alpha = 1/Math.sqrt(2);
+                node.state.beta = 1/Math.sqrt(2);
+                
+                // Добавляем в запутанные узлы
+                if (!this.state.entangledNodes.includes(nodeId)) {
+                    this.state.entangledNodes.push(nodeId);
+                }
+                
+                this.updateStateDisplay();
+                this.updateNodesDisplay();
+                this.updateEntanglementDisplay();
+                
+                // Визуальные эффекты
+                this.createParticles('|0⟩');
+                this.createParticles('|1⟩');
+                
+                // Системное сообщение
+                this.addSystemMessage(`Установлена запутанность с узлом ${node.name}`);
+                
+                // Награда
+                this.addCoins(0.8);
+                
+                // Запись транзакции
+                this.addTransaction('entanglement', 0.8, `Подключение к узлу ${node.name}`);
+                
+                // Обновление матрицы
+                this.updateMatrixView();
+                
+                // Обновление графиков
+                this.updateCharts();
+            },
+            
+            // Телепортация сообщения
+            teleportMessage: function(nodeId, message) {
+                const node = this.state.discoveredNodes.find(n => n.id === nodeId);
+                if (!node || !this.state.entangledNodes.includes(nodeId)) {
+                    this.addSystemMessage("Ошибка: нет запутанности с выбранным узлом");
+                    return;
+                }
+                
+                // Измерение (разрушает запутанность)
+                const result = this.measure();
+                
+                setTimeout(() => {
+                    // Восстановление запутанности
+                    this.createEntanglement(nodeId);
+                    
+                    // Добавление сообщения
+                    this.addMessage({
+                        sender: `Вы → ${node.name}`,
+                        text: message,
+                        isTeleported: true
+                    });
+                    
+                    // Обновление графика телепортации
+                    const teleportationData = this.state.charts.teleportation.data.datasets[0].data;
+                    teleportationData.push(Math.random() * 50 + 50);
+                    if (teleportationData.length > 10) teleportationData.shift();
+                    this.state.charts.teleportation.update();
+                    
+                    // Автоматический ответ
+                    setTimeout(() => {
+                        this.addMessage({
+                            sender: `${node.name} → Вы`,
+                            text: this.generateQuantumResponse(message),
+                            isTeleported: true
+                        });
+                        
+                        // Награда за общение
+                        this.addCoins(0.3);
+                        this.addTransaction('message', 0.3, `Сообщение узлу ${node.name}`);
+                    }, 1000 + Math.random() * 2000);
+                }, 500);
+            },
+            
+            // Генерация ответа
+            generateQuantumResponse: function(message) {
+                const responses = [
+                    `Квантовый отклик: "${message.substring(0, Math.min(message.length, 10))}..."`,
+                    `Суперпозиция: ${Math.random() > 0.5 ? 'ДА' : 'НЕТ'}`,
+                    `Энергия сообщения: ${(message.length * 0.7).toFixed(2)} квант`,
+                    `Состояние коллапсировало в ответ`,
+                    `Уровень ${this.state.evolutionLevel}: принято`,
+                    `Нейросеть обработала запрос`,
+                    `Квантовый канал подтверждает получение`,
+                    `Ответ сгенерирован с точностью ${(Math.random() * 30 + 70).toFixed(1)}%`
+                ];
+                return responses[Math.floor(Math.random() * responses.length)];
+            },
+            
+            // Анализ сообщения
+            analyzeMessage: function(message) {
+                if (!message) {
+                    this.addSystemMessage("Введите сообщение для анализа!");
+                    return;
+                }
+                
+                const lengthScore = Math.min(message.length / 50 * 100, 100);
+                const complexityScore = this.calculateComplexity(message);
+                const quantumScore = Math.random() * 30 + 70;
+                
+                const analysisResult = `
+                    <div style="margin-top:15px;">
+                        <div>Длина: ${lengthScore.toFixed(1)}%</div>
+                        <div>Сложность: ${complexityScore.toFixed(1)}%</div>
+                        <div>Квантовость: ${quantumScore.toFixed(1)}%</div>
+                    </div>
+                `;
+                
+                this.createDynamicWindow(
+                    "Анализ сообщения",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-neural); margin-top:0;">Результаты анализа</h3>
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"
+                        </div>
+                        ${analysisResult}
+                        <button onclick="QuantumSystem.optimizeMessage('${message.replace(/'/g, "\\'")}')" style="width:100%; margin-top:15px;">
+                            Оптимизировать сообщение
+                        </button>
+                    </div>
+                    `
+                );
+            },
+            
+            // Оптимизация сообщения
+            optimizeMessage: function(message) {
+                const optimized = message.length > 30 
+                    ? message.substring(0, 30) + " [оптимизировано]" 
+                    : message + " [квант]";
+                
+                document.getElementById('message-text').value = optimized;
+                this.addSystemMessage("Сообщение оптимизировано для квантовой передачи");
+                this.addCoins(0.2);
+            },
+            
+            // Расчет сложности сообщения
+            calculateComplexity: function(message) {
+                const uniqueChars = new Set(message.toLowerCase().replace(/\s/g, '')).size;
+                const wordCount = message.split(/\s+/).filter(w => w.length > 0).length;
+                return Math.min((uniqueChars * 5 + wordCount * 3), 100);
+            },
+            
+            // Добавление системного сообщения
+            addSystemMessage: function(text) {
+                this.addMessage({
+                    sender: "Система",
+                    text: text,
+                    isSystem: true
+                });
+            },
+            
+            // Добавление сообщения
+            addMessage: function(message) {
+                this.state.messages.push(message);
+                this.updateMessagesDisplay();
+            },
+            
+            // Обновление отображения состояния
+            updateStateDisplay: function() {
+                const alpha = this.state.alpha.toFixed(3);
+                const beta = this.state.beta.toFixed(3);
+                const prob0 = (this.state.alpha ** 2 * 100).toFixed(1);
+                const prob1 = (this.state.beta ** 2 * 100).toFixed(1);
+                
+                document.getElementById('quantum-state-display').textContent = 
+                    `|Ψ⟩ = ${alpha}|0⟩ + ${beta}|1⟩`;
+                
+                document.getElementById('alpha-value').textContent = alpha;
+                document.getElementById('beta-value').textContent = beta;
+                document.getElementById('probability-value').textContent = 
+                    `${prob0}% |0⟩, ${prob1}% |1⟩`;
+                
+                gsap.to(this.qubit.scale, {
+                    x: 1 + this.state.alpha * 0.5,
+                    y: 1 + this.state.beta * 0.5,
+                    duration: 0.5
+                });
+                
+                // Обновление графика состояния
+                this.updateCharts();
+            },
+            
+            // Эффект суперпозиции
+            superpositionEffect: function() {
+                gsap.to(this.state, {
+                    alpha: 1/Math.sqrt(2),
+                    beta: 1/Math.sqrt(2),
+                    duration: 1,
+                    onUpdate: () => this.updateStateDisplay()
+                });
+                
+                this.createParticles('|0⟩');
+                this.createParticles('|1⟩');
+                this.addSystemMessage("Состояние приведено к суперпозиции");
+            },
+            
+            // Эффект запутанности
+            entanglementEffect: function() {
+                if (this.state.entangledNodes.length === 0) {
+                    this.addSystemMessage("Нет запутанных узлов для эффекта");
+                    return;
+                }
+                
+                const node = this.state.discoveredNodes.find(
+                    n => n.id === this.state.entangledNodes[0]);
+                
+                gsap.to(this.state, {
+                    alpha: node.state.alpha,
+                    beta: node.state.beta,
+                    duration: 1,
+                    onUpdate: () => {
+                        this.updateStateDisplay();
+                        this.createParticles('|0⟩');
+                        this.createParticles('|1⟩');
+                    },
+                    onComplete: () => {
+                        setTimeout(() => {
+                            this.superpositionEffect();
+                        }, 1000);
+                    }
+                });
+                
+                this.addSystemMessage(`Демонстрация запутанности с узлом ${node.name}`);
+            },
+            
+            // Анимация перехода состояния
+            animateStateTransition: function() {
+                const targetAlpha = Math.random();
+                const targetBeta = Math.sqrt(1 - targetAlpha**2);
+                
+                gsap.to(this.state, {
+                    alpha: targetAlpha,
+                    beta: targetBeta,
+                    duration: 2,
+                    onUpdate: () => this.updateStateDisplay(),
+                    onComplete: () => {
+                        this.createParticles('|0⟩');
+                        this.createParticles('|1⟩');
+                        this.addSystemMessage("Анимация перехода состояния завершена");
+                    }
+                });
+            },
+            
+            // Анализ измерения
+            analyzeMeasurement: function() {
+                const result = document.getElementById('measurement-result').textContent.includes('|0⟩') ? 0 : 1;
+                const analysis = [
+                    "Коллапс волновой функции зарегистрирован",
+                    "Состояние соответствует ожиданиям",
+                    "Незначительные квантовые флуктуации",
+                    "Высокая точность измерения",
+                    "Рекомендована калибровка оборудования"
+                ][Math.floor(Math.random() * 5)];
+                
+                document.getElementById('neural-analysis-result').innerHTML = `
+                    <div style="margin-bottom:15px;">
+                        <div>Измеренное состояние: ${result}</div>
+                        <div>Достоверность: ${(Math.random() * 20 + 80).toFixed(1)}%</div>
+                        <div style="margin-top:10px;">${analysis}</div>
+                    </div>
+                `;
+                
+                // Обновление графика нейросети
+                this.state.charts.neural.data.datasets[0].data = [
+                    Math.random() * 20 + 75,
+                    Math.random() * 20 + 75,
+                    Math.random() * 20 + 75,
+                    Math.random() * 20 + 75
+                ];
+                this.state.charts.neural.update();
+                
+                openModal('neural-modal');
+            },
+            
+            // Обновление отображения узлов
+            updateNodesDisplay: function() {
+                const nodesList = document.getElementById('nodes-list');
+                const nodeSelect = document.getElementById('node-select');
+                const messageNodeSelect = document.getElementById('message-node-select');
+                const entangledNodeSelect = document.getElementById('entangled-node-select');
+                
+                // Очистка списков
+                nodesList.innerHTML = '';
+                nodeSelect.innerHTML = '<option value="">Выберите узел</option>';
+                messageNodeSelect.innerHTML = '<option value="">Выберите узел</option>';
+                entangledNodeSelect.innerHTML = '<option value="">Выберите узел</option>';
+                
+                // Расчет статистики
+                let totalDistance = 0;
+                let activeNodes = 0;
+                
+                // Заполнение списков
+                this.state.discoveredNodes.forEach(node => {
+                    // Статистика
+                    totalDistance += parseFloat(node.distance);
+                    if (node.state.alpha > 0.5) activeNodes++;
+                    
+                    // Список узлов
+                    const nodeElement = document.createElement('div');
+                    nodeElement.className = 'quantum-node';
+                    nodeElement.style.margin = '10px 0';
+                    nodeElement.style.padding = '10px';
+                    nodeElement.innerHTML = `
+                        <div><strong>${node.name}</strong></div>
+                        <div>ID: ${node.id}</div>
+                        <div>Расстояние: ${node.distance}</div>
+                        <div>Состояние: ${node.state.alpha}|0⟩ + ${node.state.beta}|1⟩</div>
+                        <div>Запутанность: ${this.state.entangledNodes.includes(node.id) ? '✅' : '❌'}</div>
+                    `;
+                    nodesList.appendChild(nodeElement);
+                    
+                    // Опции для select
+                    const option = document.createElement('option');
+                    option.value = node.id;
+                    option.textContent = `${node.name} (${node.id})`;
+                    nodeSelect.appendChild(option.cloneNode(true));
+                    messageNodeSelect.appendChild(option.cloneNode(true));
+                    
+                    // Только для запутанных узлов
+                    if (this.state.entangledNodes.includes(node.id)) {
+                        entangledNodeSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+                
+                // Обновление счетчиков
+                document.getElementById('nodes-count').textContent = this.state.discoveredNodes.length;
+                document.getElementById('entangled-count').textContent = this.state.entangledNodes.length;
+                document.getElementById('matrix-count').textContent = this.state.discoveredNodes.length;
+                
+                document.getElementById('total-nodes-count').textContent = this.state.discoveredNodes.length;
+                document.getElementById('active-nodes-count').textContent = activeNodes;
+                document.getElementById('avg-distance').textContent = 
+                    this.state.discoveredNodes.length > 0 
+                        ? (totalDistance / this.state.discoveredNodes.length).toFixed(2) 
+                        : '0.00';
+                
+                // Обновление графиков
+                this.updateCharts();
+            },
+            
+            // Обновление отображения запутанности
+            updateEntanglementDisplay: function() {
+                const list = document.getElementById('entanglement-list');
+                list.innerHTML = '';
+                
+                let totalCorrelation = 0;
+                let stablePairs = 0;
+                
+                this.state.entangledNodes.forEach(nodeId => {
+                    const node = this.state.discoveredNodes.find(n => n.id === nodeId);
+                    if (!node) return;
+                    
+                    const correlation = node.state.alpha * this.state.alpha + node.state.beta * this.state.beta;
+                    totalCorrelation += correlation;
+                    if (correlation > 0.9) stablePairs++;
+                    
+                    const element = document.createElement('div');
+                    element.className = 'quantum-node';
+                    element.style.margin = '10px 0';
+                    element.style.padding = '10px';
+                    element.innerHTML = `
+                        <div><strong>${node.name}</strong></div>
+                        <div>ID: ${node.id}</div>
+                        <div>Состояние: ${node.state.alpha}|0⟩ + ${node.state.beta}|1⟩</div>
+                        <div>Корреляция: ${correlation.toFixed(3)}</div>
+                    `;
+                    list.appendChild(element);
+                });
+                
+                const totalPairs = this.state.entangledNodes.length;
+                document.getElementById('total-pairs-count').textContent = totalPairs;
+                document.getElementById('avg-correlation').textContent = 
+                    totalPairs > 0 ? (totalCorrelation / totalPairs).toFixed(2) : '0.00';
+                document.getElementById('entanglement-stability').textContent = 
+                    totalPairs > 0 ? `${Math.round(stablePairs / totalPairs * 100)}%` : '0%';
+            },
+            
+            // Обновление отображения сообщений
+            updateMessagesDisplay: function() {
+                const incoming = document.getElementById('incoming-messages');
+                incoming.innerHTML = '';
+                
+                this.state.messages.forEach(msg => {
+                    const msgElement = document.createElement('div');
+                    msgElement.className = 'quantum-node';
+                    msgElement.style.margin = '10px 0';
+                    msgElement.style.padding = '10px';
+                    
+                    if (msg.isSystem) {
+                        msgElement.style.borderLeft = '3px solid var(--quantum-gold)';
+                        msgElement.innerHTML = `<div><em>${msg.text}</em></div>`;
+                    } else if (msg.isTeleported) {
+                        msgElement.style.borderLeft = '3px solid var(--quantum-pink)';
+                        msgElement.innerHTML = `
+                            <div><strong>${msg.sender}</strong></div>
+                            <div>${msg.text}</div>
+                            <div style="font-size: 0.8em; color: var(--quantum-blue)">Квантовая телепортация</div>
+                        `;
+                    } else {
+                        msgElement.innerHTML = `
+                            <div><strong>${msg.sender}</strong></div>
+                            <div>${msg.text}</div>
+                        `;
+                    }
+                    
+                    incoming.appendChild(msgElement);
+                });
+                
+                document.getElementById('messages-count').textContent = this.state.messages.length;
+                
+                // Обновление графиков
+                this.updateCharts();
+            },
+            
+            // Обновление отображения QCoin
+            updateCoinDisplay: function() {
+                document.getElementById('coin-amount').textContent = this.state.quantumCoins.toFixed(2);
+                document.getElementById('nav-coin-amount').textContent = this.state.quantumCoins.toFixed(2);
+                
+                // Анимация
+                if (this.state.quantumCoins > 0) {
+                    gsap.to('#quantum-coin-display', {
+                        scale: 1.1,
+                        duration: 0.3,
+                        yoyo: true,
+                        repeat: 1
+                    });
+                }
+            },
+            
+            // Обновление отображения уровня эволюции
+            updateEvolutionDisplay: function() {
+                document.getElementById('evolution-level').textContent = this.state.evolutionLevel;
+                document.getElementById('neural-layer').textContent = this.state.evolutionLevel;
+                document.getElementById('evolution-progress').style.width = 
+                    `${Math.min(this.state.evolutionLevel * 10, 100)}%`;
+                
+                // Проверка на эволюцию
+                if (this.state.evolutionLevel > 1 && Math.random() > 0.8) {
+                    this.showEvolutionNotification();
+                }
+            },
+            
+            // Показать уведомление об эволюции
+            showEvolutionNotification: function() {
+                const notification = document.getElementById('evolution-notification');
+                notification.style.display = 'block';
+                document.getElementById('notification-text').textContent = 
+                    `Система эволюционировала до уровня ${this.state.evolutionLevel}!`;
+                
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 5000);
+            },
+            
+            // Добавление QCoin
+            addCoins: function(amount) {
+                const multiplier = this.state.evolutionLevel * 0.5 + 1;
+                this.state.quantumCoins += amount * multiplier;
+                this.updateCoinDisplay();
+                
+                // Автопокупка улучшений
+                this.autoPurchaseUpgrades();
+            },
+            
+            // Автоматическая покупка улучшений
+            autoPurchaseUpgrades: function() {
+                const upgrades = [
+                    { id: 'speed', cost: 1.5, condition: !this.state.features.speed },
+                    { id: 'nodes', cost: 2.0, condition: !this.state.features.nodes },
+                    { id: 'ai', cost: 5.0, condition: !this.state.features.ai && this.state.evolutionLevel >= 3 },
+                    { id: 'neural', cost: 4.0, condition: !this.state.features.neural && this.state.evolutionLevel >= 2 },
+                    { id: 'encryption', cost: 3.5, condition: !this.state.features.encryption && this.state.evolutionLevel >= 4 }
+                ];
+                
+                upgrades.forEach(upgrade => {
+                    if (upgrade.condition && this.state.quantumCoins >= upgrade.cost) {
+                        this.buyItem(upgrade.id);
+                    }
+                });
+            },
+            
+            // Создание частиц для визуальных эффектов
+            createParticles: function(type) {
+                const color = type === '|0⟩' ? 0x00ffff : 0xff00aa;
+                const count = 50 + Math.floor(Math.random() * 50);
+                
+                for (let i = 0; i < count; i++) {
+                    const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+                    const material = new THREE.MeshBasicMaterial({ 
+                        color: color,
+                        transparent: true,
+                        opacity: 1
+                    });
+                    
+                    const particle = new THREE.Mesh(geometry, material);
+                    
+                    // Начальная позиция
+                    particle.position.x = (Math.random() - 0.5) * 2;
+                    particle.position.y = (Math.random() - 0.5) * 2;
+                    particle.position.z = (Math.random() - 0.5) * 2;
+                    
+                    // Случайная скорость
+                    particle.userData.vx = (Math.random() - 0.5) * 0.2;
+                    particle.userData.vy = (Math.random() - 0.5) * 0.2;
+                    particle.userData.vz = (Math.random() - 0.5) * 0.2;
+                    
+                    this.particles.add(particle);
+                }
+            },
+            
+            // Квантовое измерение
+            measure: function() {
+                const probability = this.state.alpha ** 2;
+                const result = Math.random() < probability ? '|0⟩' : '|1⟩';
+                
+                // Коллапс волновой функции
+                if (result === '|0⟩') {
+                    this.state.alpha = 1;
+                    this.state.beta = 0;
+                } else {
+                    this.state.alpha = 0;
+                    this.state.beta = 1;
+                }
+                
+                this.updateStateDisplay();
+                this.createParticles(result);
+                
+                return result;
+            },
+            
+            // Генерация квантового ключа BB84
+            generateQuantumKey: function() {
+                const basis = Array.from({length: 128}, () => Math.random() > 0.5 ? 1 : 0);
+                const bits = Array.from({length: 128}, () => Math.random() > 0.5 ? 1 : 0);
+                this.state.quantumKey = { basis, bits };
+                
+                const keyString = bits.join('').match(/.{1,8}/g).join(' ');
+                document.getElementById('quantum-key-display').innerHTML = `
+                    <div style="word-break: break-all; margin: 10px 0;">${keyString}</div>
+                    <div style="font-size: 0.8em;">Длина: 128 бит (BB84 протокол)</div>
+                `;
+                
+                // Награда за генерацию ключа
+                this.addCoins(0.7);
+                
+                // Анимация
+                gsap.from('#quantum-key-display', {
+                    opacity: 0,
+                    scale: 0.9,
+                    duration: 0.5
+                });
+                
+                return { basis, bits };
+            },
+            
+            // Улучшение шифрования
+            enhanceEncryption: function() {
+                if (!this.state.quantumKey) {
+                    this.addSystemMessage("Сначала сгенерируйте квантовый ключ!");
+                    return;
+                }
+                
+                if (!this.state.features.encryption) {
+                    this.addSystemMessage("Требуется улучшение 'Квантовое шифрование'!");
+                    return;
+                }
+                
+                // Увеличиваем длину ключа
+                const newBasis = [...this.state.quantumKey.basis, ...Array.from({length: 128}, () => Math.random() > 0.5 ? 1 : 0)];
+                const newBits = [...this.state.quantumKey.bits, ...Array.from({length: 128}, () => Math.random() > 0.5 ? 1 : 0)];
+                
+                this.state.quantumKey = { basis: newBasis, bits: newBits };
+                
+                const keyString = newBits.join('').match(/.{1,8}/g).join(' ');
+                document.getElementById('quantum-key-display').innerHTML = `
+                    <div style="word-break: break-all; margin: 10px 0;">${keyString}</div>
+                    <div style="font-size: 0.8em;">Длина: 256 бит (улучшенный BB84 протокол)</div>
+                `;
+                
+                this.addSystemMessage("Квантовый ключ улучшен до 256 бит");
+                this.addCoins(0.5);
+            },
+            
+            // Шифрование сообщения
+            encryptMessage: function(message, key) {
+                const encrypted = [];
+                for (let i = 0; i < message.length; i++) {
+                    const charCode = message.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                    encrypted.push(charCode.toString(16).padStart(2, '0'));
+                }
+                return encrypted.join('');
+            },
+            
+            // Защищенное сообщение
+            secureMessage: function(nodeId, message) {
+                if (!message) {
+                    this.addSystemMessage("Введите сообщение для шифрования!");
+                    return;
+                }
+                
+                const key = this.generateQuantumKey();
+                const keyString = key.bits.join('');
+                const encrypted = this.encryptMessage(message, keyString);
+                
+                this.addMessage({
+                    sender: "Система",
+                    text: `Сообщение зашифровано ключом BB84 (128 бит)`,
+                    isSystem: true
+                });
+                
+                this.teleportMessage(nodeId, encrypted);
+            },
+            
+            // Показать маркетплейс
+            showMarketplace: function() {
+                if (this.marketplaceWindow) {
+                    this.closeWindow(this.marketplaceWindow);
+                }
+                
+                this.marketplaceWindow = this.createDynamicWindow(
+                    "Кванткоин Маркетплейс",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Торговая площадка</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div style="font-size:1.2em; text-align:center;">
+                                Ваш баланс: <span style="color:var(--quantum-gold);">${this.state.quantumCoins.toFixed(2)} QCoin</span>
+                            </div>
+                        </div>
+                        
+                        <div class="quantum-form">
+                            <div class="form-title">Доступные улучшения</div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('speed')">
+                                <div>⚡ Ускорение поиска</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>1.5 QCoin</span>
+                                    <span>+30% скорости</span>
+                                </div>
+                            </div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('nodes')">
+                                <div>🌐 Дополнительные узлы</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>2.0 QCoin</span>
+                                    <span>+3 узла</span>
+                                </div>
+                            </div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('ai')">
+                                <div>🧠 ИИ-ассистент</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>5.0 QCoin</span>
+                                    <span>Квантовый помощник</span>
+                                </div>
+                            </div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('evolution')">
+                                <div>🚀 Ускорение эволюции</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>3.0 QCoin</span>
+                                    <span>+1 уровень</span>
+                                </div>
+                            </div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('neural')">
+                                <div>🧠 Нейросетевая интеграция</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>4.0 QCoin</span>
+                                    <span>Нейроквантовые алгоритмы</span>
+                                </div>
+                            </div>
+                            
+                            <div class="quantum-market-item" onclick="QuantumSystem.buyItem('encryption')">
+                                <div>🔒 Квантовое шифрование</div>
+                                <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                                    <span>3.5 QCoin</span>
+                                    <span>256-битные ключи</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Покупка предметов
+            buyItem: function(item) {
+                const prices = {
+                    'speed': 1.5,
+                    'nodes': 2.0,
+                    'ai': 5.0,
+                    'evolution': 3.0,
+                    'neural': 4.0,
+                    'encryption': 3.5
+                };
+                
+                if (this.state.quantumCoins >= prices[item]) {
+                    this.state.quantumCoins -= prices[item];
+                    this.state.features[item] = true;
+                    this.updateCoinDisplay();
+                    
+                    let message = "";
+                    switch(item) {
+                        case 'speed':
+                            clearInterval(this.state.autoProcesses.search.interval);
+                            this.startAutoProcess('search');
+                            message = "Поиск узлов ускорен на 30%!";
+                            break;
+                        case 'nodes':
+                            this.addRandomNodes(3);
+                            message = "3 новых узла добавлены в сеть!";
+                            break;
+                        case 'ai':
+                            this.createAIAssistant();
+                            message = "ИИ-ассистент активирован!";
+                            break;
+                        case 'evolution':
+                            this.state.evolutionLevel++;
+                            this.updateEvolutionDisplay();
+                            message = `Уровень эволюции повышен до ${this.state.evolutionLevel}!`;
+                            break;
+                        case 'neural':
+                            message = "Нейросетевая интеграция активирована!";
+                            this.initNeuralConnections();
+                            break;
+                        case 'encryption':
+                            message = "Квантовое шифрование улучшено до 256 бит!";
+                            break;
+                    }
+                    
+                    this.addTransaction('purchase', -prices[item], `Покупка: ${item}`);
+                    
+                    if (item !== 'ai') {
+                        this.createDynamicWindow(
+                            "Покупка успешна",
+                            `
+                            <div style="padding:20px; text-align:center;">
+                                <h3 style="color:var(--quantum-gold);">${message}</h3>
+                                <p>Спасибо за покупку!</p>
+                            </div>
+                            `
+                        );
+                    }
+                } else {
+                    this.createDynamicWindow(
+                        "Недостаточно средств",
+                        `
+                        <div style="padding:20px; text-align:center;">
+                            <h3 style="color:var(--quantum-pink);">Недостаточно QCoin</h3>
+                            <p>Вам нужно еще ${(prices[item] - this.state.quantumCoins).toFixed(2)} QCoin</p>
+                        </div>
+                        `
+                    );
+                }
+            },
+            
+            // Создание ИИ-ассистента
+            createAIAssistant: function() {
+                if (this.aiWindow) {
+                    this.closeWindow(this.aiWindow);
+                }
+                
+                this.aiWindow = this.createDynamicWindow(
+                    "Квантовый ИИ-ассистент",
+                    `
+                    <div style="padding:15px;">
+                        <div style="display:flex; align-items:center; margin-bottom:15px;">
+                            <div style="width:40px; height:40px; background:var(--quantum-purple); border-radius:50%; display:flex; align-items:center; justify-content:center; margin-right:10px;">
+                                <span style="font-size:1.5em;">🧠</span>
+                            </div>
+                            <div>
+                                <h3 style="margin:0;">Квантовый ИИ</h3>
+                                <div style="font-size:0.8em;">Уровень ${this.state.evolutionLevel}</div>
+                            </div>
+                        </div>
+                        
+                        <div id="ai-chat" style="height:200px; overflow-y:auto; margin-bottom:15px; border:1px solid var(--quantum-blue); border-radius:5px; padding:10px;">
+                            <div class="ai-response">ИИ: Привет! Я ваш квантовый ассистент. Чем могу помочь?</div>
+                        </div>
+                        
+                        <div style="display:flex;">
+                            <input type="text" id="ai-message" placeholder="Ваш вопрос..." style="flex:1; padding:10px; background:rgba(0,0,0,0.5); border:1px solid var(--quantum-blue); border-radius:5px 0 0 5px; color:white;">
+                            <button onclick="QuantumSystem.sendAIMessage('${this.aiWindow}')" style="border-radius:0 5px 5px 0;">➤</button>
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Отправка сообщения ИИ
+            sendAIMessage: function(windowId) {
+                const input = document.querySelector(`#${windowId} #ai-message`);
+                const message = input.value;
+                const chat = document.querySelector(`#${windowId} #ai-chat`);
+                
+                if (message.trim() === "") return;
+                
+                // Сообщение пользователя
+                chat.innerHTML += `
+                    <div style="text-align:right; margin:10px 0; color:var(--quantum-pink);">
+                        Вы: ${message}
+                    </div>
+                `;
+                
+                input.value = "";
+                chat.scrollTop = chat.scrollHeight;
+                
+                // ИИ "думает"
+                setTimeout(() => {
+                    const responses = [
+                        `Квантовый анализ: "${message.substring(0, Math.min(message.length, 10))}..."`,
+                        `Суперпозиция ответа: ${Math.random() > 0.5 ? 'ДА' : 'НЕТ'}`,
+                        `На уровне ${this.state.evolutionLevel} я могу сказать...`,
+                        "Запутанные кубиты указывают на положительный ответ",
+                        "Коллапс волновой функции дает этот ответ",
+                        "Нейросеть предсказывает следующий результат...",
+                        "Квантовые вычисления завершены",
+                        "Вероятность правильного ответа: 87.3%"
+                    ];
+                    
+                    const randomResponse = responses[
+                        Math.floor(Math.random() * responses.length)
+                    ];
+                    
+                    chat.innerHTML += `
+                        <div class="ai-response">ИИ: ${randomResponse}</div>
+                    `;
+                    
+                    chat.scrollTop = chat.scrollHeight;
+                    
+                    // Награда за использование ИИ
+                    this.addCoins(0.2);
+                }, 1000 + Math.random() * 2000);
+            },
+            
+            // Регистрация пользователя
+            showUserRegistration: function() {
+                if (this.userWindow) {
+                    this.closeWindow(this.userWindow);
+                    return;
+                }
+                
+                if (this.state.user.registered) {
+                    this.showUserProfile();
+                    return;
+                }
+                
+                this.userWindow = this.createDynamicWindow(
+                    "Регистрация в квантовой сети",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Создание аккаунта</h3>
+                        
+                        <div class="user-register-form">
+                            <input type="email" id="user-email" placeholder="Ваш email" style="width:100%;">
+                            <button onclick="QuantumSystem.registerUser()" style="width:100%; margin-top:10px;">
+                                Зарегистрироваться
+                            </button>
+                        </div>
+                        
+                        <div style="font-size:0.8em; color:var(--quantum-blue); margin-top:10px;">
+                            После регистрации вы получите уникальный квантовый ID
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Регистрация пользователя
+            registerUser: function() {
+                const emailInput = document.getElementById('user-email');
+                const email = emailInput.value.trim();
+                
+                if (!email.includes('@') || !email.includes('.')) {
+                    this.addSystemMessage("Введите корректный email!");
+                    return;
+                }
+                
+                const userId = `user-${CryptoJS.SHA256(email + Date.now()).toString().substr(0, 12)}`;
+                
+                this.state.user = {
+                    registered: true,
+                    email,
+                    id: userId,
+                    joinDate: new Date(),
+                    transactions: []
+                };
+                
+                this.updateUserDisplay();
+                this.addSystemMessage(`Пользователь ${email} зарегистрирован! ID: ${userId}`);
+                this.addCoins(2.0);
+                this.addTransaction('reward', 2.0, 'Регистрация в системе');
+                
+                if (this.userWindow) {
+                    this.closeWindow(this.userWindow);
+                    this.showUserProfile();
+                }
+            },
+            
+            // Показать профиль пользователя
+            showUserProfile: function() {
+                this.userWindow = this.createDynamicWindow(
+                    "Профиль пользователя",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">${this.state.user.email}</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div>ID: ${this.state.user.id}</div>
+                            <div>Дата регистрации: ${this.state.user.joinDate.toLocaleString()}</div>
+                            <div>Уровень: ${this.state.evolutionLevel}</div>
+                        </div>
+                        
+                        <button onclick="QuantumSystem.showTransactionHistory()" style="width:100%;">
+                            Показать историю транзакций
+                        </button>
+                    </div>
+                    `
+                );
+            },
+            
+            // Показать историю транзакций
+            showTransactionHistory: function() {
+                if (this.transactionWindow) {
+                    this.closeWindow(this.transactionWindow);
+                    return;
+                }
+                
+                this.transactionWindow = this.createDynamicWindow(
+                    "История транзакций",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Все транзакции</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px; text-align:center;">
+                            <div style="font-size:1.2em;">
+                                Баланс: <span style="color:var(--quantum-gold);">${this.state.quantumCoins.toFixed(2)} QCoin</span>
+                            </div>
+                        </div>
+                        
+                        <div class="transaction-history" id="transaction-history-list">
+                            ${this.state.user.transactions.map(tx => `
+                                <div class="transaction-item">
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span>${tx.description}</span>
+                                        <span style="color:${tx.amount > 0 ? 'var(--quantum-green)' : 'var(--quantum-pink)'}">
+                                            ${tx.amount > 0 ? '+' : ''}${tx.amount.toFixed(2)} QCoin
+                                        </span>
+                                    </div>
+                                    <div style="font-size:0.7em; color:var(--quantum-blue);">
+                                        ${tx.timestamp.toLocaleString()}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Добавление транзакции
+            addTransaction: function(type, amount, description) {
+                if (!this.state.user.registered) return;
+                
+                const tx = {
+                    id: `tx-${Date.now()}`,
+                    type,
+                    amount,
+                    balance: this.state.quantumCoins,
+                    timestamp: new Date(),
+                    description
+                };
+                
+                this.state.user.transactions.push(tx);
+                this.updateTransactionDisplay();
+            },
+            
+            // Обновление отображения транзакций
+            updateTransactionDisplay: function() {
+                document.getElementById('transactions-count').textContent = this.state.user.transactions.length;
+                
+                if (this.transactionWindow) {
+                    const list = document.getElementById('transaction-history-list');
+                    if (list) {
+                        list.innerHTML = this.state.user.transactions.map(tx => `
+                            <div class="transaction-item">
+                                <div style="display:flex; justify-content:space-between;">
+                                    <span>${tx.description}</span>
+                                    <span style="color:${tx.amount > 0 ? 'var(--quantum-green)' : 'var(--quantum-pink)'}">
+                                        ${tx.amount > 0 ? '+' : ''}${tx.amount.toFixed(2)} QCoin
+                                    </span>
+                                </div>
+                                <div style="font-size:0.7em; color:var(--quantum-blue);">
+                                    ${tx.timestamp.toLocaleString()}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            },
+            
+            // Обновление отображения пользователя
+            updateUserDisplay: function() {
+                document.getElementById('user-id').textContent = this.state.user.registered 
+                    ? this.state.user.id.substr(0, 8) + '...' 
+                    : 'Не зарегистрирован';
+            },
+            
+            // Показать матрицу сети
+            showMatrixView: function() {
+                if (this.matrixWindow) {
+                    this.closeWindow(this.matrixWindow);
+                    return;
+                }
+                
+                this.matrixWindow = this.createDynamicWindow(
+                    "Матрица квантовой сети",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Топология сети</h3>
+                        <div>Всего узлов: ${this.state.discoveredNodes.length}</div>
+                        <div>Запутанных пар: ${this.state.entangledNodes.length}</div>
+                        
+                        <div class="matrix-grid" id="matrix-grid">
+                            ${this.state.matrixView.map(node => `
+                                <div class="matrix-cell">
+                                    <div>${node.name}</div>
+                                    <div style="font-size:0.8em;">${node.connections} соедин.</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Обновление матрицы сети
+            updateMatrixView: function() {
+                this.state.matrixView = this.state.discoveredNodes.map(node => {
+                    const connections = this.state.entangledNodes.filter(id => id === node.id).length;
+                    return {
+                        id: node.id,
+                        name: node.name,
+                        connections
+                    };
+                }).sort((a, b) => b.connections - a.connections);
+                
+                if (this.matrixWindow) {
+                    const grid = document.getElementById('matrix-grid');
+                    if (grid) {
+                        grid.innerHTML = this.state.matrixView.map(node => `
+                            <div class="matrix-cell">
+                                <div>${node.name}</div>
+                                <div style="font-size:0.8em;">${node.connections} соедин.</div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            },
+            
+            // Показать нейросеть
+            showNeuralNetwork: function() {
+                if (!this.state.features.neural) {
+                    this.addSystemMessage("Требуется улучшение 'Нейросетевая интеграция'!");
+                    return;
+                }
+                
+                if (this.neuralWindow) {
+                    this.closeWindow(this.neuralWindow);
+                    return;
+                }
+                
+                this.neuralWindow = this.createDynamicWindow(
+                    "Нейроквантовая сеть",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Архитектура нейросети</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div>Уровень: ${this.state.evolutionLevel}</div>
+                            <div>Нейронов: ${this.state.neuralConnections.length}</div>
+                            <div>Связей: ${this.state.neuralConnections.reduce((sum, n) => sum + n.connections.length, 0)}</div>
+                        </div>
+                        
+                        <div class="neural-connection" id="neural-window-connection" style="height:150px;"></div>
+                        
+                        <button onclick="QuantumSystem.optimizeNeuralConnections()" style="width:100%; margin-top:15px;">
+                            Оптимизировать связи
+                        </button>
+                    </div>
+                    `
+                );
+                
+                // Инициализация нейронных связей в окне
+                const container = document.getElementById('neural-window-connection');
+                container.innerHTML = '';
+                
+                this.state.neuralConnections.forEach(neuron => {
+                    const node = document.createElement('div');
+                    node.className = 'neural-node';
+                    node.style.left = `${neuron.x}%`;
+                    node.style.top = `${neuron.y}%`;
+                    container.appendChild(node);
+                });
+                
+                this.state.neuralConnections.forEach((neuron, i) => {
+                    neuron.connections.forEach(connIdx => {
+                        const fromEl = container.children[i];
+                        const toEl = container.children[connIdx];
+                        
+                        const fromRect = fromEl.getBoundingClientRect();
+                        const toRect = toEl.getBoundingClientRect();
+                        
+                        const containerRect = container.getBoundingClientRect();
+                        
+                        const fromX = fromRect.left + fromRect.width/2 - containerRect.left;
+                        const fromY = fromRect.top + fromRect.height/2 - containerRect.top;
+                        const toX = toRect.left + toRect.width/2 - containerRect.left;
+                        const toY = toRect.top + toRect.height/2 - containerRect.top;
+                        
+                        const length = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+                        const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+                        
+                        const line = document.createElement('div');
+                        line.className = 'neural-line';
+                        line.style.width = `${length}px`;
+                        line.style.left = `${fromX}px`;
+                        line.style.top = `${fromY}px`;
+                        line.style.transform = `rotate(${angle}deg)`;
+                        line.style.opacity = 0.5 + Math.random() * 0.5;
+                        
+                        container.appendChild(line);
+                    });
+                });
+            },
+            
+            // Показать квантовую лабораторию
+            showQuantumLab: function() {
+                if (this.labWindow) {
+                    this.closeWindow(this.labWindow);
+                    return;
+                }
+                
+                this.labWindow = this.createDynamicWindow(
+                    "Квантовая лаборатория",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Эксперименты</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div>Всего экспериментов: ${this.state.experiments.length}</div>
+                            <div>Последний: ${this.state.experiments.length > 0 ? this.state.experiments[this.state.experiments.length-1].name : 'нет'}</div>
+                        </div>
+                        
+                        <div class="quantum-grid">
+                            <div class="quantum-card" onclick="QuantumSystem.runExperiment('superposition')">
+                                <div>Суперпозиция</div>
+                                <div style="font-size:0.8em;">Исследование состояний</div>
+                            </div>
+                            
+                            <div class="quantum-card" onclick="QuantumSystem.runExperiment('entanglement')">
+                                <div>Запутанность</div>
+                                <div style="font-size:0.8em;">Квантовая корреляция</div>
+                            </div>
+                            
+                            <div class="quantum-card" onclick="QuantumSystem.runExperiment('teleportation')">
+                                <div>Телепортация</div>
+                                <div style="font-size:0.8em;">Передача состояний</div>
+                            </div>
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Проведение эксперимента
+            runExperiment: function(type) {
+                let name = "";
+                let cost = 0;
+                let reward = 0;
+                
+                switch(type) {
+                    case 'superposition':
+                        name = "Исследование суперпозиции";
+                        cost = 1.0;
+                        reward = 1.5;
+                        this.superpositionEffect();
+                        break;
+                    case 'entanglement':
+                        name = "Исследование запутанности";
+                        cost = 1.5;
+                        reward = 2.0;
+                        this.entanglementEffect();
+                        break;
+                    case 'teleportation':
+                        name = "Эксперимент по телепортации";
+                        cost = 2.0;
+                        reward = 3.0;
+                        if (this.state.entangledNodes.length > 0) {
+                            this.teleportMessage(
+                                this.state.entangledNodes[0], 
+                                "Тестовое сообщение для эксперимента"
+                            );
+                        }
+                        break;
+                }
+                
+                if (this.state.quantumCoins < cost) {
+                    this.addSystemMessage(`Недостаточно QCoin для эксперимента "${name}"`);
+                    return;
+                }
+                
+                this.state.quantumCoins -= cost;
+                this.updateCoinDisplay();
+                
+                setTimeout(() => {
+                    this.state.quantumCoins += reward;
+                    this.updateCoinDisplay();
+                    this.addSystemMessage(`Эксперимент "${name}" завершен! Награда: ${reward} QCoin`);
+                    
+                    this.state.experiments.push({
+                        name,
+                        timestamp: new Date(),
+                        cost,
+                        reward
+                    });
+                    
+                    document.getElementById('experiments-count').textContent = this.state.experiments.length;
+                }, 3000 + Math.random() * 4000);
+            },
+            
+            // Показать аналитику
+            showAnalytics: function() {
+                if (this.analyticsWindow) {
+                    this.closeWindow(this.analyticsWindow);
+                    return;
+                }
+                
+                this.analyticsWindow = this.createDynamicWindow(
+                    "Квантовая аналитика",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Анализ данных</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div>Всего данных: ${(this.state.analyticsData.length * 0.1).toFixed(1)} ТБ</div>
+                            <div>Последний анализ: ${new Date().toLocaleString()}</div>
+                        </div>
+                        
+                        <div class="quantum-chart">
+                            <canvas id="analytics-chart"></canvas>
+                        </div>
+                        
+                        <button onclick="QuantumSystem.runDataAnalysis()" style="width:100%; margin-top:15px;">
+                            Запустить анализ
+                        </button>
+                    </div>
+                    `
+                );
+                
+                // Инициализация графика аналитики
+                const ctx = document.getElementById('analytics-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Узлы', 'Сообщения', 'Запутанность', 'Транзакции'],
+                        datasets: [{
+                            data: [
+                                this.state.discoveredNodes.length,
+                                this.state.messages.length,
+                                this.state.entangledNodes.length,
+                                this.state.user.transactions.length
+                            ],
+                            backgroundColor: [
+                                'rgba(0, 255, 255, 0.7)',
+                                'rgba(255, 0, 170, 0.7)',
+                                'rgba(157, 0, 255, 0.7)',
+                                'rgba(255, 215, 0, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(0, 255, 255, 1)',
+                                'rgba(255, 0, 170, 1)',
+                                'rgba(157, 0, 255, 1)',
+                                'rgba(255, 215, 0, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: 'white'
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+            
+            // Запуск анализа данных
+            runDataAnalysis: function() {
+                if (!this.analyticsWindow) return;
+                
+                const analysisTime = 2000 + Math.random() * 3000;
+                const btn = document.querySelector(`#${this.analyticsWindow} button`);
+                btn.textContent = "Анализ...";
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.textContent = "Запустить анализ";
+                    btn.disabled = false;
+                    
+                    const insights = [
+                        "Обнаружены оптимальные маршруты",
+                        "Выявлены паттерны сообщений",
+                        "Рекомендовано масштабирование сети",
+                        "Найдены неэффективные узлы",
+                        "Предложены улучшения безопасности"
+                    ];
+                    
+                    this.state.analyticsData.push({
+                        timestamp: new Date(),
+                        insight: insights[Math.floor(Math.random() * insights.length)]
+                    });
+                    
+                    document.getElementById('analytics-data').textContent = 
+                        (this.state.analyticsData.length * 0.1).toFixed(1);
+                    
+                    this.addSystemMessage(`Анализ данных завершен: ${this.state.analyticsData[this.state.analyticsData.length-1].insight}`);
+                    this.addCoins(0.8);
+                }, analysisTime);
+            },
+            
+            // Создание динамического окна
+            createDynamicWindow: function(title, content) {
+                const windowId = `window-${Math.random().toString(36).substr(2, 9)}`;
+                const offset = this.state.dynamicWindows.length * 30;
+                
+                const windowElement = document.createElement('div');
+                windowElement.className = 'dynamic-window';
+                windowElement.id = windowId;
+                windowElement.style.left = `${100 + offset}px`;
+                windowElement.style.top = `${100 + offset}px`;
+                
+                windowElement.innerHTML = `
+                    <div class="window-header">
+                        <div>${title}</div>
+                        <button class="close-window" onclick="QuantumSystem.closeWindow('${windowId}')">✕</button>
+                    </div>
+                    <div class="window-content" style="padding:15px;">
+                        ${content}
+                    </div>
+                `;
+                
+                document.body.appendChild(windowElement);
+                this.state.dynamicWindows.push(windowId);
+                
+                // Делаем окно перемещаемым
+                this.makeWindowDraggable(windowId);
+                
+                return windowId;
+            },
+            
+            // Закрытие окна
+            closeWindow: function(windowId) {
+                const windowElement = document.getElementById(windowId);
+                if (windowElement) {
+                    windowElement.remove();
+                    this.state.dynamicWindows = this.state.dynamicWindows.filter(id => id !== windowId);
+                    
+                    // Награда за взаимодействие
+                    this.addCoins(0.1);
+                }
+                
+                if (this.aiWindow === windowId) {
+                    this.aiWindow = null;
+                }
+                
+                if (this.marketplaceWindow === windowId) {
+                    this.marketplaceWindow = null;
+                }
+                
+                if (this.userWindow === windowId) {
+                    this.userWindow = null;
+                }
+                
+                if (this.transactionWindow === windowId) {
+                    this.transactionWindow = null;
+                }
+                
+                if (this.matrixWindow === windowId) {
+                    this.matrixWindow = null;
+                }
+                
+                if (this.neuralWindow === windowId) {
+                    this.neuralWindow = null;
+                }
+                
+                if (this.labWindow === windowId) {
+                    this.labWindow = null;
+                }
+                
+                if (this.analyticsWindow === windowId) {
+                    this.analyticsWindow = null;
+                }
+            },
+            
+            // Функция перемещения окон
+            makeWindowDraggable: function(windowId) {
+                const windowElement = document.getElementById(windowId);
+                const header = windowElement.querySelector('.window-header');
+                
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                header.onmousedown = dragMouseDown;
+                
+                function dragMouseDown(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }
+                
+                function elementDrag(e) {
+                    e = e || window.event;
+                    e.preventDefault();
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    windowElement.style.top = (windowElement.offsetTop - pos2) + "px";
+                    windowElement.style.left = (windowElement.offsetLeft - pos1) + "px";
+                }
+                
+                function closeDragElement() {
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            },
+            
+            // Инициализация отслеживания пользователя
+            initUserTracking: function() {
+                // Анализ кликов
+                document.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'BUTTON' && e.target.className !== 'quantum-node') {
+                        this.learnFromInteraction('click');
+                        this.addCoins(0.01);
+                    }
+                });
+                
+                // Анализ вкладок
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        this.learnFromInteraction(`tab_${tab.dataset.tab}`);
+                        this.addCoins(0.1);
+                    });
+                });
+                
+                // Анализ настроек
+                document.getElementById('interface-theme').addEventListener('change', (e) => {
+                    this.state.theme = e.target.value;
+                    this.applyTheme();
+                    this.addSystemMessage(`Тема интерфейса изменена на ${e.target.value}`);
+                });
+            },
+            
+            // Обучение на основе взаимодействий
+            learnFromInteraction: function(action) {
+                if (!this.state.learnedPatterns[action]) {
+                    this.state.learnedPatterns[action] = 0;
+                }
+                this.state.learnedPatterns[action]++;
+                
+                // Автоматическое улучшение при частых действиях
+                if (this.state.learnedPatterns[action] % 20 === 0) {
+                    this.addSystemMessage(`Обнаружен паттерн: ${action.replace(/_/g, ' ')}`);
+                    this.addCoins(0.5);
+                }
+            },
+            
+            // Показать статистику обучения
+            showLearningStats: function() {
+                const stats = Object.entries(this.state.learnedPatterns)
+                    .map(([action, count]) => ({ action, count }))
+                    .sort((a, b) => b.count - a.count);
+                
+                const statsWindow = this.createDynamicWindow(
+                    "Статистика обучения",
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">Паттерны взаимодействия</h3>
+                        
+                        <div style="margin-bottom:15px;">
+                            <div>Уровень эволюции: ${this.state.evolutionLevel}</div>
+                            <div>Всего взаимодействий: ${stats.reduce((sum, stat) => sum + stat.count, 0)}</div>
+                        </div>
+                        
+                        <div style="max-height:300px; overflow-y:auto;">
+                            ${stats.map(stat => `
+                                <div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid rgba(0,255,255,0.2);">
+                                    <span>${stat.action.replace(/_/g, ' ')}</span>
+                                    <span>${stat.count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    `
+                );
+            },
+            
+            // Экспорт данных обучения
+            exportLearningData: function() {
+                const dataStr = JSON.stringify(this.state.learnedPatterns, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `quantum-learning-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.addSystemMessage("Данные обучения экспортированы");
+                this.addCoins(0.3);
+            },
+            
+            // Сброс настроек
+            resetSettings: function() {
+                if (confirm("Вы уверены, что хотите сбросить все настройки?")) {
+                    localStorage.removeItem('quantum-theme');
+                    document.getElementById('node-name').value = "Нейроквантовый Узел";
+                    document.getElementById('search-sensitivity').value = "medium";
+                    document.getElementById('auto-entangle').value = "on";
+                    document.getElementById('interface-theme').value = "quantum";
+                    
+                    this.state.theme = 'quantum';
+                    this.applyTheme();
+                    
+                    this.addSystemMessage("Настройки сброшены к значениям по умолчанию");
+                    this.addCoins(0.2);
+                }
+            },
+            
+            // Создание окна управления узлом
+            createNodeWindow: function(nodeId) {
+                const node = this.state.discoveredNodes.find(n => n.id === nodeId);
+                if (!node) {
+                    this.addSystemMessage("Выберите узел для управления!");
+                    return;
+                }
+                
+                const windowId = this.createDynamicWindow(
+                    `Управление узлом: ${node.name}`,
+                    `
+                    <div style="padding:15px;">
+                        <h3 style="color:var(--quantum-gold); margin-top:0;">${node.name}</h3>
+                        
+                        <div style="background:rgba(0,0,30,0.5); padding:15px; border-radius:10px; margin-bottom:15px;">
+                            <div>ID: ${node.id}</div>
+                            <div>Расстояние: ${node.distance}</div>
+                            <div>Состояние: ${node.state.alpha}|0⟩ + ${node.state.beta}|1⟩</div>
+                            <div>Запутанность: ${this.state.entangledNodes.includes(node.id) ? '✅' : '❌'}</div>
+                        </div>
+                        
+                        <button onclick="QuantumSystem.createEntanglement('${node.id}')" style="width:100%; margin-bottom:10px;">
+                            ${this.state.entangledNodes.includes(node.id) ? 'Обновить запутанность' : 'Установить запутанность'}
+                        </button>
+                        
+                        <div style="display:flex;">
+                            <input type="text" id="message-to-${node.id}" placeholder="Сообщение для узла" style="flex:1; padding:10px; background:rgba(0,0,0,0.5); border:1px solid var(--quantum-blue); border-radius:5px 0 0 5px; color:white;">
+                            <button onclick="QuantumSystem.teleportMessage('${node.id}', document.getElementById('message-to-${node.id}').value)" style="border-radius:0 5px 5px 0;">➤</button>
+                        </div>
+                    </div>
+                    `
+                );
+            }
+        };
+        
+        // =============================================
+        // ГЛОБАЛЬНЫЕ ФУНКЦИИ
+        // =============================================
+        function showTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Деактивируем все кнопки вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показываем выбранную вкладку
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Активируем кнопку
+            document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Награда за переключение вкладок
+            QuantumSystem.addCoins(0.1);
+        }
+        
+        function switchQuantumTab(tabName) {
+            document.querySelectorAll('.quantum-tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.quantum-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            document.querySelector(`.quantum-tab[onclick*="${tabName}"]`).classList.add('active');
+        }
+        
+        function switchMessageTab(tabName) {
+            const incoming = document.getElementById('incoming-messages');
+            incoming.innerHTML = '';
+            
+            QuantumSystem.state.messages.forEach(msg => {
+                if (tabName === 'all' || 
+                    (tabName === 'system' && msg.isSystem) || 
+                    (tabName === 'teleported' && msg.isTeleported)) {
+                    
+                    const msgElement = document.createElement('div');
+                    msgElement.className = 'quantum-node';
+                    msgElement.style.margin = '10px 0';
+                    msgElement.style.padding = '10px';
+                    
+                    if (msg.isSystem) {
+                        msgElement.style.borderLeft = '3px solid var(--quantum-gold)';
+                        msgElement.innerHTML = `<div><em>${msg.text}</em></div>`;
+                    } else if (msg.isTeleported) {
+                        msgElement.style.borderLeft = '3px solid var(--quantum-pink)';
+                        msgElement.innerHTML = `
+                            <div><strong>${msg.sender}</strong></div>
+                            <div>${msg.text}</div>
+                            <div style="font-size: 0.8em; color: var(--quantum-blue)">Квантовая телепортация</div>
+                        `;
+                    } else {
+                        msgElement.innerHTML = `
+                            <div><strong>${msg.sender}</strong></div>
+                            <div>${msg.text}</div>
+                        `;
+                    }
+                    
+                    incoming.appendChild(msgElement);
+                }
+            });
+            
+            document.querySelectorAll('.quantum-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelector(`.quantum-tab[onclick*="${tabName}"]`).classList.add('active');
+        }
+        
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function measureQuantumState() {
+            const result = QuantumSystem.measure();
+            
+            // Показываем результат в модальном окне
+            document.getElementById('measurement-result').textContent = `Результат: ${result}`;
+            
+            // Создаем визуализацию эффекта
+            const effectDiv = document.getElementById('measurement-effect');
+            effectDiv.innerHTML = '';
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = effectDiv.offsetWidth;
+            canvas.height = effectDiv.offsetHeight;
+            effectDiv.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            if (result === '|0⟩') {
+                // Синий взрыв
+                for (let i = 0; i < 100; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100;
+                    
+                    ctx.beginPath();
+                    ctx.arc(
+                        centerX + Math.cos(angle) * distance,
+                        centerY + Math.sin(angle) * distance,
+                        2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = `rgba(0, 255, 255, ${1 - distance/100})`;
+                    ctx.fill();
+                }
+            } else {
+                // Розовый взрыв
+                for (let i = 0; i < 100; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.random() * 100;
+                    
+                    ctx.beginPath();
+                    ctx.arc(
+                        centerX + Math.cos(angle) * distance,
+                        centerY + Math.sin(angle) * distance,
+                        2,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = `rgba(255, 0, 170, ${1 - distance/100})`;
+                    ctx.fill();
+                }
+            }
+            
+            openModal('measurement-modal');
+            
+            // Награда за измерение
+            QuantumSystem.addCoins(0.5);
+        }
+        
+        function startQuantumSearch() {
+            QuantumSystem.quantumSearchNodes();
+        }
+        
+        function refreshNodes() {
+            document.getElementById('nodes-list').innerHTML = '<div style="text-align: center;">Сканирование...</div>';
+            setTimeout(() => {
+                QuantumSystem.updateNodesDisplay();
+            }, 1000);
+            
+            // Награда за обновление
+            QuantumSystem.addCoins(0.1);
+        }
+        
+        function connectToNode() {
+            const select = document.getElementById('node-select');
+            const nodeId = select.value;
+            
+            if (nodeId) {
+                QuantumSystem.createEntanglement(nodeId);
+            } else {
+                QuantumSystem.addSystemMessage("Выберите узел для подключения!");
+            }
+        }
+        
+        function teleportMessage() {
+            const select = document.getElementById('entangled-node-select');
+            const nodeId = select.value;
+            const message = document.getElementById('quantum-message').value;
+            
+            if (nodeId && message) {
+                QuantumSystem.teleportMessage(nodeId, message);
+                document.getElementById('quantum-message').value = '';
+            } else {
+                QuantumSystem.addSystemMessage("Выберите запутанный узел и введите сообщение!");
+            }
+        }
+        
+        function sendQuantumMessage() {
+            const select = document.getElementById('message-node-select');
+            const nodeId = select.value;
+            const message = document.getElementById('message-text').value;
+            
+            if (nodeId && message) {
+                QuantumSystem.addMessage({
+                    sender: `Вы → ${QuantumSystem.state.discoveredNodes.find(n => n.id === nodeId).name}`,
+                    text: message
+                });
+                
+                // Симулируем ответ
+                setTimeout(() => {
+                    QuantumSystem.addMessage({
+                        sender: `${QuantumSystem.state.discoveredNodes.find(n => n.id === nodeId).name} → Вы`,
+                        text: QuantumSystem.generateQuantumResponse(message)
+                    });
+                }, 1000 + Math.random() * 2000);
+                
+                document.getElementById('message-text').value = '';
+                
+                // Награда за сообщение
+                QuantumSystem.addCoins(0.3);
+            } else {
+                QuantumSystem.addSystemMessage("Выберите узел и введите сообщение!");
+            }
+        }
+        
+        function saveSettings() {
+            const nodeName = document.getElementById('node-name').value;
+            QuantumSystem.addSystemMessage(`Настройки сохранены! Имя узла: ${nodeName}`);
+            
+            // Награда за сохранение
+            QuantumSystem.addCoins(0.2);
+        }
+        
+        function generateQuantumKey() {
+            QuantumSystem.generateQuantumKey();
+        }
+        
+        function toggleMobileMenu() {
+            document.getElementById('nav-panel').classList.toggle('active');
+        }
+        
+        // =============================================
+        // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+        // =============================================
+        window.onload = function() {
+            // Инициализация системы
+            QuantumSystem.init();
+            
+            // Назначаем глобальные функции
+            window.QuantumSystem = QuantumSystem;
+            
+            // Обработчики вкладок
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    showTab(this.dataset.tab);
+                });
+            });
+            
+            // Обработчик изменения темы
+            document.getElementById('interface-theme').addEventListener('change', function() {
+                QuantumSystem.state.theme = this.value;
+                QuantumSystem.applyTheme();
+            });
+        };
+    </script>
+</body>
+</html>
